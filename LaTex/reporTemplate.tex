@@ -1,0 +1,1059 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                
+\geometry{letterpaper}           
+\usepackage{graphicx}        
+\usepackage{color}
+\usepackage{german}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{hyperref}
+\usepackage{textgreek}
+\usepackage{subfig}
+\usepackage{amssymb, amsmath}
+\usepackage{cleveref}
+\usepackage{cite}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\usepackage[ansinew]{inputenc}
+\usepackage{mathtools} 
+
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert} 
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\usepackage{amsthm}
+ 
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem} % reset theorem numbering for each chapter 
+
+\theoremstyle{plain}
+\newtheorem{lemma}{Lemma}
+ 
+
+\setlength{\parindent}{0em} 
+\begin{document}
+\newcommand{\E}{\mbox{I\negthinspace E}}
+
+\input{cover}
+\bigskip
+\bigskip
+\bigskip
+\qquad Erstgutachter: Prof. Dr. Claudia Strauch\\
+\null \qquad Zweitgutachter: Prof. Dr. Andreas Neuenkirch
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ 
+\newpage
+
+%%%%%%%%%% Table of content %%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\section{Einleitung und Motivation} \label{Einleitung}
+Diese Arbeit basiert auf der wissenschaftlichen Arbeit \glqq Nonparametric regression using deep neural networks with ReLU activation function\grqq \ von Johannes Schmidt-Hieber, vgl. \cite{hieber}, und behandelt das Thema Deep Learning, eines der am meisten diskutierten Themen der Statistik von heute. Das steigende Interesse liegt in der Entwicklung der Technik und der Digitalisierung begründet. Diese beiden Faktoren haben es erst ermöglicht, tiefe neuronale Netzwerke, die Werkzeuge des Deep Learnings, effektiv zu nutzen. Neuronale Netzwerke brauchen nämlich nicht nur leistungsstarke Computer, sondern auch eine sehr große Menge an Daten. Erst die Digitalisierung hat es ermöglicht persönliche Daten, digitale Fotos, Sensordaten und mehr zu speichern und produzieren, durch beispielsweise leistungsstarke Speicherkarten, Social Media Plattformen, Smartphones und präzise Sensoren. Im Gegensatz dazu nutzen traditionelle Machine Learning Algorithmen diese Menge an Daten nicht effektiv aus. 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=10cm,height=10cm,keepaspectratio]{Bilder/DataScale}
+	\caption[Caption for LOF]{Bei großen Datenmengen performen Deep Learning Methoden viel besser als traditionelle Machine Learning Algorithmen.\footnotemark }
+	\label{ungerichteterGraph}
+\end{figure}
+\\
+\footnotetext{Quelle: Analytics Vidhya: Web Url \textless https://www.analyticsvidhya.com/blog/2017/04/comparison-between-deep-learning-machine-learning/\textgreater, 15.06.2019.}In den letzten Jahren gab es durch die Methoden des Deep Learnings beeindruckende praktische Resultate, wie zum Beispiel die Objekterkennung in Bildern. Dabei verarbeiten sogenannte faltende neuronale Netzwerke Bilder als Input, um bestimmte Objekte im Bild zu identifizieren. Der Einsatz in der Bildverarbeitung ist jedoch nur einer von vielen Bereichen, in denen neuronale Netzwerke bereits die Standardmethode bilden. Jedoch hat sich die Technik schneller entwickelt als die Theorie, weshalb sich die Frage stellt, wie man die beobachteten Phänomene der Praxis in einer statistischen Theorie begründet, um damit gegebenenfalls weitere Erkenntnisse für die Praxis zu gewinnen.\\ \\
+Im 1. Kapitel \glqq Einleitung und Motivation\grqq \ werden wichtige Begriffe eingeführt, die für das Verständnis der Arbeit wichtig sind. Im 2. Kapitel \glqq Beschreibung des Modells\grqq \ werden wir unser neuronales Netzwerk definieren und die Rahmenbedingungen des Modells festlegen, wie beispielsweise die Nutzung der ReLU Aktivierungsfunktion. In dem Abschnitt definieren wir auch die betrachtete Netzwerkklasse und Funktionsklasse der Regressionsfunktion. Die Haupttheoreme und Beweise findet man im 3. Kapitel \glqq Hauptresultate\grqq. Unter dem 4. Kapitel \glqq Beispiele\grqq \ werden die additiven und verallgemeinerten additiven Modelle als Beispiele diskutiert. Im letzten Kapitel werden wir die wichtigsten Ergebnisse dieser Arbeit erwähnen und dabei Verbesserungen und Erweiterungen des Modells besprechen.
+\subsection{Ziel der Arbeit}
+Wir betrachten in dieser Arbeit ein multivariates nichtparametrisches Regressionsmodel und nehmen dabei an, dass die Regressionsfunktion aus einer Komposition von Funktionen besteht. Ziel dieser Arbeit ist es, für eine bestimmte gewählte Netzwerkarchitektur, eine obere Schranke für den $L_2$-Fehler zu beweisen, unter der Annahme, dass das tiefe neuronale Netzwerk \textit{sparsly connected} ist mit einer ReLU Aktivierungsfunktion. Aus den Resultaten können wir folgern, dass unter bestimmen Voraussetzungen \textit{tiefe feedforward neuronale Netzwerke} den Fluch der Dimensionalität umgehen. Wir werden anschließend eine untere Schranke für den $L_2$-Fehler angeben, für dessen Beweis wir auf\cite{hieber} verweisen. Unter denselben Annahmen können wir damit die Minimax-Konvergenzrate für Schätzer aus solchen Netzwerken (bis auf einen in der Stichprobengröße $n$ logarithmischen Faktor) folgern. Die Resultate in dieser Arbeit werden unter anderem auch zeigen, dass die Tiefe eines neuronalen Netzwerkes mit der Anzahl an Trainingsdaten steigen sollte, um die besten Resultate zu erhalten. Vorab müssen wir jedoch einige Fachtermini einführen, die für das Verständnis dieser Arbeit essenziell sind.
+
+\subsection{Nichtparametrische Regression}
+
+Wir werden zunächst das statistische Problem definieren, das wir in dieser Arbeit behandeln. In der Regressionsanalyse betrachten wir einen Zufallsvektor $(\mathbf{X},Y)$ mit Werten in $\mathbb{R}^d \times \mathbb{R}$, wobei $\E Y^2 < \infty $ gilt. Das Ziel der Analyse ist es, den Wert für $Y$ aus dem Beobachtungsvektor $\mathbf{X}$ vorherzusagen. Mathematisch kann man diese Beziehung darstellen als
+\begin{equation} \label{eq:1}
+ Y = f(\mathbf{X}) + \underbrace{\epsilon}_{\textit{Störgröße}}. 
+\end{equation} 
+Die Störgröße ist dabei eine standardnormalverteilte Zufallsvariable, die unabhängig von $\mathbf{X}$ ist.
+Das Ziel ist es nun, eine (messbare) Funktion $f': \mathbb{R}^d \to \mathbb{R}$ zu finden, sodass $f'(\mathbf{X})$ unser $Y$ so gut wie möglich \glqq approximiert\grqq. Eine sogenannte \textit{Verlustfunktion} ist eine messbare Funktion $L: \mathbb{R} \times \mathbb{R} \rightarrow \mathbb{R}_{\geq 0}$, die uns ein Maß gibt, wie gut wir $Y$ mit unserer Funktion approximiert haben. Da aber nun $\mathbf{X},Y$ Zufallsvariablen sind, können wir nicht einfach $\vert L(Y,f'(\mathbf{X})) \vert$ minimieren, da diese selber eine Zufallsvariable ist, sondern wir minimieren $\E[L(Y,f'(\mathbf{X}))]$, auch das Risiko genannt \cite[S. 49]{strauch}. \\ Eine Wahl für die Verlustfunktion, die wir im Abschnitt \ref{Hauptresultat} motivieren werden, ist die \textit{quadratische Verlustfunktion} $L(y,s) = (y-s)^2$. Es folgt für das Risiko $\E[L(Y,f'(\mathbf{X})] = \E (\vert Y-f'(\mathbf{X})\vert^2)$, die man auch  mittlere quadratische Abweichung von $f'$ oder auch $L_2$-Risiko nennt. Wir suchen somit eine Funktion $f_0: \mathbb{R}^d \rightarrow \mathbb{R}$, die die mittlere quadratische Abweichung minimiert, d.h. $f_0$ soll 
+\begin{equation} \label{eq:2}
+ \E[L(Y,f_0(\mathbf{X})] = \E (\vert Y-f_0(\mathbf{X})\vert^2) = \min_{f':\mathbb{R}^d \rightarrow \mathbb{R} } \E(\vert Y-f'(\mathbf{X}) \vert ^2)
+\end{equation} 
+erfüllen.
+Um herauszufinden, wie genau nun $f_0$ aussieht, definieren wir $m:\mathbb{R}^d \to \mathbb{R},\ m = \E (Y \vert \mathbf{X} = \mathbf{x})$ und betrachten eine beliebige Funktion $f': \mathbb{R}^d \to \mathbb{R}$ mit der Gleichung
+\begin{align*} 
+\E (\vert f'(\mathbf{X})-Y\vert^2) &= \E (\vert f'(\mathbf{X}) - m(\mathbf{X}) + m(\mathbf{X}) - Y \vert ^2 ) \\ &=\E (\vert f'(\mathbf{X}) - m(\mathbf{X}) \vert ^2 ) + \E (\vert m(\mathbf{X}) - Y) \vert ^2 ),
+\end{align*} 
+wobei wir diese als gegeben nehmen und in dieser Arbeit nicht herleiten werden, vgl. \cite[S. 2]{gyorfi}.
+Man sieht leicht ein, dass $m$ unsere gesuchte Funktion ist, denn  $\E (\vert f'(\mathbf{X})-Y\vert^2)$ wird minimal genau dann, wenn $f' = m$. Man nennt die Funktion $f_0 = m = \E (Y \vert \mathbf{X} = \mathbf{x})$ Regressionsfunktion. Den Ausdruck $\E (\vert f'(\mathbf{X})-m(\mathbf{X})\vert^2)$ nennt man auch $L_2$-Fehler von $f'$, vgl. \cite[S. 2]{gyorfi}.  Wir können also das $L_2$ Risiko als eine Summe des $L_2$ Risikos der Regressionsfunktion, der auch als unvermeidbarer Fehler bezeichnet wird, und des $L_2$-Fehler von $f'$ darstellen.   
+\\ \\
+Es verbirgt sich jedoch ein Problem: Wir kennen die Verteilung von $(\mathbf{X},Y)$ nicht, weshalb die Schätzung von $Y$ durch die Regressionsfunktion $ f_0 = \E (Y \vert \mathbf{X} = \mathbf{x})$ nicht möglich ist. Doch falls wir Daten gegeben haben, die derselben Verteilung wie $(\mathbf{X},Y)$ unterliegen, haben wir die Möglichkeit $f_0$ durch die Daten zu schätzen. Das statistische Problem lautet nun, eine Funktion $f_n: \mathbb{R}^d \to \mathbb{R}$ zur Schätzung der Regressionsfunktion $f_0$ durch gegebene Beobachtungen $D_n = {(\mathbf{X}_1, Y_ 1, ..., \mathbf{X}_n,Y_n)}$ zu konstruieren, wobei $(\mathbf{X},Y), (\mathbf{X}_1, Y_ 1), ..., (\mathbf{X}_n,Y_n)$ u.i.v. Zufallsvariablen sind. Es gilt dabei, dass die Funktion $f_n(\mathbf{x}) = f_n(\mathbf{x},D_n)$ messbar bezüglich $\mathbf{x}$ und den Daten ist. Das Ziel ist es nun, gegeben den Daten $D_n$, eine Funktion $f_n(\cdot) = f_n(\cdot, D_n)$ so zu konstruieren, sodass deren $L_2$-Fehler $\E (\vert f_n(\mathbf{X})-f_0(\mathbf{X})\vert^2)$ minimal sind. 
+\\ \\
+Als nächstes wollen wir den Unterschied zwischen der parametrischen und nichtparametrischen Regression erläutern. Bei der parametrischen Regression wird angenommen, dass die Struktur der Regressionsfunktion bekannt ist und zusätzlich wird angenommen, dass diese nur von endlich vielen Parameter abhängt, deren Werte aber unbekannt sind. Diese unbekannten Werte werden nun aus den Daten geschätzt werden, vgl. \cite[S. 4]{kohler1}. Beispielsweise wird bei der linearen Regression angenommen, dass die Regressionsfunktion linear ist und wir schätzen, die endliche Anzahl an Faktoren der Linearkombination. Es gibt jedoch wesentliche Nachteile der parametrischen Regression, denn man muss den Daten zunächst eine Struktur entnehmen, welche oftmals nicht direkt ersichtlich ist.
+\begin{figure}[h] % Do not use only [h] in real documents.
+\begin{minipage}[t]{.45\linewidth}
+\includegraphics[width=\linewidth]{Bilder/abbildung2.pdf}
+\caption[Caption for LOF]{Datenpunkte.}
+\label{fig:1}
+\end{minipage}\hfill
+\begin{minipage}[t]{.45\linewidth}
+\includegraphics[width=\linewidth]{Bilder/abbildung1.pdf}
+\caption[Caption for LOF]{Datenpunkte mit der wahren Regressionsfunktion. \footnotemark}
+\end{minipage}
+\end{figure} 
+\\\footnotetext{\cite[S. 11]{gyorfi}.}Zum Beispiel kann man der Regressionsfunktion aus der Abbildung 2 nicht direkt mit bloßem Auge eine Strukturannahme unterstellen. Zusätzlich können bei Verletzung der angenommen Strukturannahme sehr schnell schlechte Schätzungen entstehen, vgl. \cite[S. 11]{gyorfi}.\\ \\
+Im Gegensatz dazu wird bei der nichtparametrischen Regression angenommen, dass die Regressionsfunktion keine Funktionsstruktur aufweist, die durch endlich viele Parameter beschrieben werden kann. Es werden dabei nur bestimmte allgemeine Regularitätsbedingungen gestellt, wie zum Beispiel Stetigkeit, Differenzierbarkeit oder Hölder-Stetigkeit, vgl. \cite[S. 3]{strauch}. Somit können wir eine allgemeinere strukturelle Annahme an die Regressionsfunktion stellen. Dabei wird die Regressionsfunktion aus den Daten geschätzt, wobei es mehrere Verfahren gibt, wie zum Beispiel neuronale Netzwerke, Kernel-Regression und KNN Schätzer, vgl. \cite{gyorfi, goodfellow}.
+\\ \\ In dieser Arbeit werden wir uns auf die neuronalen Netzwerke und ihre möglichen Vorteile gegenüber anderen Schätzern fokussieren. Primär werden wir den durch die Konvergenzrate entstehenden Vorteil analysieren.
+
+\subsection{Konvergenzrate} \label{konvergenzgeschwindigkeit}
+Um den Fehler eines Schätzers $f_n$ einer Regressionsfunktion $f_0$ zu messen, benutzen wir, wie oben motiviert, den $L_2$-Fehler und definieren ihn als 
+\begin{equation} \label{eq:4}
+ R( f_n, f_0) := \int \vert f_n(\mathbf{X})-f_0(\mathbf{X})\vert ^2 P _X(dx),
+\end{equation} 
+wobei $P_X$ die Verteilung der Zufallsvariable $\mathbf{X}$ ist, vgl. \cite[S.2]{gyorfi}. Der Schätzer $f_n$ ist dabei abhängig von den Daten $D_n$. Man will natürlich einen Schätzer finden, wofür der $L_2$ gegen 0 konvergiert (mit der Anzahl der Beobachtungen) und das so schnell wie möglich. Wir haben immer noch nicht die Verteilung $(\mathbf{X},Y)$ in irgendeiner Weise eingeschränkt, außer dass $E(Y^2) < \infty $ gelten muss. Leider gibt es keinen Schätzer für den der $L_2$-Fehler für alle Verteilungen von $(\mathbf{X},Y)$ mit einer festen Konvergenzrate gegen 0 konvergiert, d.h. für jeden Schätzer kann die Konvergenzrate beliebig langsam sein, vgl. \cite{gyorfi}, Abschnitt 3.1. \\ \\
+Wir müssen also unsere Verteilungsklasse, die in der die Verteilung von $(\mathbf{X},Y)$ liegt, einschränken, um nicht triviale Konvergenzraten zu erhalten. Bevor wir jedoch die optimale Konvergenzrate eines Schätzverfahren gegeben einer Verteilungsklasse analysieren können, müssen wir vorher definieren, was optimal in diesem Kontext heißt. Wir sprechen von einer optimalen Konvergenzrate, falls die Rate der Minimax-Konvergenzrate entspricht. Wir müssen somit die Minimax-Konvergenz"=rate einführen. \\ \\
+Wir versuchen zu einer gegebenen Klasse $D$ von Verteilungen von $(\mathbf{X},Y)$ den maximalen $L_2$-Fehler innerhalb der Klasse 
+\begin{equation} \label{eq:5}
+\sup\limits_{(\mathbf{X},Y) \in D} \int \vert f_n(\mathbf{X})-f_0(\mathbf{X})\vert ^2 P _X(dx)
+\end{equation}
+durch einen Schätzer $f_n$ zu minimieren, d.h. der Schätzer sollte \glqq nah am\grqq \ Wert von
+\begin{equation} \label{eq:6}
+  \inf\limits_{\widetilde{f}_n} \sup\limits_{(\mathbf{X},Y) \in D} \int \vert \widetilde{f}_n(\mathbf{X})-f_0(\mathbf{X})\vert ^2 P _X(dx) 
+\end{equation}
+liegen, wobei wir hier über alle Regressionsschätzer minimieren, vgl. \cite{kohler1}. Da wir an dem asymptotische Verhalten ($n \to \infty$) für (\ref{eq:5}) und (\ref{eq:6}) interessiert sind, bedeutet (\ref{eq:5}) \glqq nah an\grqq \ (\ref{eq:6}), falls sie sich asymptotisch gleich verhalten in Abhängigkeit von n. Deshalb führen wir die folgenden Begriffe ein, die entnommen sind aus \cite{kohler1}.
+\theoremstyle{equation}
+\newtheorem{def2}{Definition}
+\begin{def2}
+Eine Folge von positiven Zahlen $(a_n)_{n \in \mathbb{N}}$ für die Klasse $D$ von Verteilungen $(\mathbf{X},Y)$ nennt man \\
+a) untere Minimax-Konvergenzrate für D $\Leftrightarrow$
+\begin{equation*} 
+  \liminf\limits_{n \rightarrow \infty} \inf\limits_{f_n} \sup\limits_{(\mathbf{X},Y) \in D} \frac{\int \vert f_n(\mathbf{X})-f_0(\mathbf{X})\vert ^2 P _X(dx)}{a_n} = C_1 > 0
+\end{equation*}
+b) obere Minimax-Konvergenzrate für D, falls für ein Schätzverfahren $f_n$ gilt
+\begin{equation*} 
+  \limsup\limits_{n \rightarrow \infty} \sup\limits_{(\mathbf{X},Y) \in D} \frac{\int \vert f_n(\mathbf{X})-f_0(\mathbf{X})\vert ^2 P _X(dx)}{a_n} = C_2 < \infty 
+\end{equation*}
+c) optimale Minimax-Konvergenzrate für D, falls $(a_n)_{n \in \mathbb{N}}$ untere und obere Minimax-Konvergenzrate für D ist.
+\end{def2}
+Wir hatten schon gesagt, dass wir die Verteilungsklasse von $(\mathbf{X},Y)$ einschränken müssen, um nicht triviale Lösungen zu bekommen, weshalb wir eine typische Annahme der nichtparametrischen Statistik treffen. Wir nehmen an, dass die Regressionsfunktion $\beta$-glatt ist. 
+Stone, siehe \cite{stone}, hatte für $\beta$-glatte Regressionsfunktionen bestimmt, dass die optimale Konvergenzrate bei $n^{-\frac{2\beta}{2\beta+d}}$ liegt, wobei $d$ die Dimension des Inputs ist. Jedoch beschäftigen sich neuronale Netzwerke häufig mit Problemen mit hochdimensionalen Input, weshalb die optimale Konvergenzrate groß ist, d.h. die Konvergenzrate für solche Probleme ist sehr langsam. Jedes statistisches Verfahren würde somit schlecht abschneiden, inklusive unser neuronales Netzwerk. Um zu verstehen, wie stark dieses Phänomen unser Modell einschränkt, machen wir ein kleines Zahlenbeispiel. Es sei ein Stichprobenumfang von $n=100$, Inputdimension $d=100$ und Glattheit $\beta = 2$ gegeben. Falls sich die Inputdimension auf $d=1036$ erhöht, dann müsste man um die selbe Konvergenzrate zu erhalten, einen Stichprobenumfang von $n = 500^{10}$ haben! Sogar in der heutigen Zeit ist diese Menge an Daten praktisch unmöglich.\\ Es hat sich aber gezeigt, dass neuronale Netzwerke nicht von dem sogenannten \glqq Fluch der Dimensionalität\grqq \ leiden. In dieser Arbeit werden wir unter anderem untersuchen, unter welchen Voraussetzungen und wie genau neuronale Netzwerke den Fluch umgehen, indem wir die Konvergenzrate des $L_2$-Fehlers analysieren.
+\subsection{Notationen}
+Vektoren werden mit fettgedruckten Buchstaben bezeichnet, zum Beispiel schreiben wir $\mathbf{x} := (x_1,..., x_d)^\top$. Wir definieren die Vektornormen mit 
+\begin{align*}
+&\vert \mathbf{x} \vert _p := (\sum_{i=1}^{d} \vert x_i \vert ^p ) ^{1/p}, \quad \vert \mathbf{x} \vert _\infty := max _i \vert x_i \vert, \quad \vert \mathbf{x} \vert_0 := \sum_{i=1} ^d \mathbf{1}(x_i \neq 0 ).
+\end{align*} 
+Für Funktionen $f$ schreiben wir die $L^p$-Norm auf $D$ als $\Vert f \Vert_p := \Vert f \Vert _{L^p(D)}$, falls klar ist, dass $D$ gemeint ist und es keine Mehrdeutigkeiten gibt. \\
+Für zwei Folgen $(a_n)_{n \in \mathbb{N}}$ und $(b_n)_{n \in \mathbb{N}}$, schreiben wir 
+\begin{align*}
+& a_n \precsim b_n \iff \exists C \in \mathbb{R}_+: \ a_n \leq C b_n \ \forall n \in \mathbb{N}, \\
+& a_n \asymp b_n \iff a_n \precsim b_n \text{ und } b_n \precsim a_n.
+\end{align*}
+Wir bezeichnen $\log_2$ als den Logarithmus zur Basis $2$ und $\lceil x \rceil$ als die kleinste ganze Zahl mit $\geq x$.
+\section{Beschreibung des Modells}
+\subsection{Motivation und Definition eines neuronalen Netzwerkes}
+Es sei $\mathbf{X}_i \in \mathbb{R}^d$ ein Beobachtungsvektor, wobei $d$ die Dimension der Beobachtungen ist. In allen Anwendungsproblemen, die wir im Abschnitt \ref{Einleitung} beschrieben haben, liegt ein Regressionsproblem mit einer hohen Inputdimension $d$ vor. Dadurch werden wir, wie oben schon beschrieben, unter dem Fluch der Dimensionalität leiden, welches zur Folge hat, dass kein statistisches Verfahren das Problem in angemessener Rechenzeit bewältigt. Ein Lösungsansatz wäre die Reduktion des Informationsgehalt des ursprünglichen Beobachtungsvektors $\mathbf{X}_i$ auf eine neue Dimension $\widetilde{d} < d$ mittels \glqq Expertenwissen\grqq \ und somit der Erhalt eines neuen Beobachtungsvektor $\mathbf{\widetilde{X}} \in \mathbb{R}^{\widetilde{d}}$. Algorithmen des maschinellen Lernens, angewandt auf die neuen Daten $(\mathbf{\widetilde{X}}_i,Y_i)_{i=1,...,n}$, liefern tatsächlich sehr gute Resultate, wobei wir jedoch annehmen, dass wir durch die Reduktion auf $\widetilde{X}_i$ alle wesentlichen Eigenschaften von $\mathbf{X}_i$ zusammengefasst haben. Bei einer sehr hohen Inputdimension $d$, wo wir dementsprechend auch eine starke Reduktion vornehmen müssen, ist es sehr unwahrscheinlich, dass wir kaum Informationsverlust erleiden und sich die Beziehung zwischen $Y_i$ und $\mathbf{\widetilde{X}}_i$ nicht wesentlich verkomplizieren, vgl. \cite[S. 194]{richter}. \\ 
+
+Neuronale Netzwerke reduzieren, genau wie oben, die Dimension $d$ zu $\widetilde{d}$, jedoch nicht durch \glqq Expertenwissen\grqq, sondern auf Basis der Trainingsdaten. Wir brauchen mit neuronalen Netzwerken also kein vorheriges Expertenwissen und können direkt mit den ursprünglichen Trainingsdaten arbeiten. Neuronale Netzwerke reduzieren den Beobachtungsvektor $\mathbf{X}_i \in \mathbb{R}^d$ auf $\mathbf{X}_i \in \mathbb{R}^{\widetilde{d}}$ in $L \in \mathbb{N}$ Schritten gleicher Struktur, vgl. \cite[S. 194]{richter}. Die Konstruktion eines Schrittes besteht aus einer einfachen Transformation des aktuell vorliegenden Vektors, wobei die Dimension der Daten dabei reduziert bzw. erhöht wird. Wir werden nach der Reduktion annehmen, dass die reduzierten Daten $(\mathbf{\widetilde{X}}_i,Y_i)_{i=1,...,n}$ dem Modell einer linearen Regression folgen, vgl. für Modelldefinition \cite[S. 27]{richter}. \\ Für die Reduktion der Dimension könnten wir in jedem Schritt beispielsweise eine einfache lineare Transformation ausprobieren, vgl. \cite[S. 194]{richter}.
+\theoremstyle {plain}
+\newtheorem *{Bem1}{Bemerkung}
+\begin{Bem1}{\cite[S. 194]{richter}\quad}(Linearer Ansatz zur Dimensionsreduktion)
+ \\Seien $p_1,...,p_L \in \mathbb{N}$. Für $i = 1,...,n$:\\ \\
+\null \ (1) $\mathbf{X}_i^{(1)} := W_{1}\mathbf{X}_i - \mathbf{v}_{1} \ \in \mathbb{R}^{p_1}$ mit geeignetem $\mathbf{v}_{1} \in \mathbb{R}^{p_1}, W_{1} \in \mathbb{R}^{p_1 \times d}$. 
+
+\null \ (2) $\mathbf{X}_i^{(2)} := W_{2}\mathbf{X}_i^{(1)} - \mathbf{v}_{2} \ \in \mathbb{R}^{p_2}$ mit geeignetem $\mathbf{v}_{2} \in \mathbb{R}^{p_2}, W_{2} \in \mathbb{R}^{p_2 \times p_1}$. 
+
+\qquad  \qquad \ \ \vdots \\ 
+\null \ (L) $\mathbf{X}_i^{(L)} := W_{L}\mathbf{X}_i^{L-1} - \mathbf{v}_{L} \ \in \mathbb{R}^{p_L}$ mit geeignetem $\mathbf{v}_{L} \in \mathbb{R}^{p_L}, W_{L} \in \mathbb{R}^{p_L \times p_{L-1}}$. \\ \\
+Annahme: $(\mathbf{X}_i^{(L)}, Y_i)_{i=1,...,n}$ folgt dem Modell einer linearen Regression. 
+\end{Bem1}
+Wir haben damit unsere Trainingsdaten in $L \in \mathbb{N}$ Schritten gleicher Struktur von $\mathbf{X}_i \in \mathbb{R}^d$ auf $\mathbf{X}_i \in \mathbb{R}^{p_L}$ reduziert. Es gibt jedoch ein Problem: Kompositionen von linearen Abbildungen bilden wieder eine lineare Abbildung. Da wir aber nun auf unsere Daten lediglich lineare Abbildungen angewandt haben, können wir das Verfahren auch als
+ \begin{equation*} 
+  \mathbf{X}_i^{(L)} = \mathbf{\widetilde{v}} + \widetilde{W} \cdot \mathbf{X}_i \ \ \ \ \ \textit{mit geeignetem } \mathbf{\widetilde{v}} \in \mathbb{R}^{p_L}, \ \widetilde{W} \in \mathbb{R}^{p_L \times d}
+\end{equation*}
+zusammenfassen. Unser Verfahren würde also einer linearen Regression entsprechen!\\ \\
+Um die Nichtlinearität in das Modell zu bekommen und somit auch komplexere Probleme lösen zu können, werden wir eine Art \glqq Störung\grqq \ der Linearität einbauen. Um die Linearität zu stören, können wir eine möglichst einfache nichtlineare Funktion $\sigma: \mathbb{R} \rightarrow \mathbb{R}$ verwenden, eine sogenannte Aktivierungsfunktion.
+
+\begin {Bem1}{\cite[S. 194]{richter}\quad}[Nichtlinearer Ansatz zur Dimensionsreduktion]
+ \\ Seien $p_1,...,p_L \in \mathbb{N}$. Für $i = 1,...,n$:\\ \\
+\null \ (1) $\mathbf{Z}_i^{(1)} :=  W_{1}\mathbf{X}_i - \mathbf{v}_{1} \ \in  \mathbb{R}^{p_1}$ mit geeignetem $\mathbf{v}_{1} \in \mathbb{R}^{p_1}, W_{1} \in \mathbb{R}^{p_1 \times d}$. \\
+(1') $\mathbf{X}_i^{(1)} := \sigma(\mathbf{Z}_i^{(1)})$
+
+\null \ (2) $\mathbf{Z}_i^{(2)} := W_{2}\mathbf{X}_i^{(1)} - \mathbf{v}_{2} \ \in \mathbb{R}^{p_2}$ mit geeignetem $\mathbf{v}_{2} \in \mathbb{R}^{p_2}, W_{2} \in \mathbb{R}^{p_2 \times p_1}$. \\
+(2') $\mathbf{X}_i^{(2)} := \sigma(\mathbf{Z}_i^{(2)})$
+
+\qquad  \qquad \ \ \vdots \\ 
+\null \ (L) $\mathbf{Z}_i^{(L)} := W_{L}\mathbf{X}_i^{(L-1)} - \mathbf{v}_{L} \ \in \mathbb{R}^{p_L}$ mit geeignetem $\mathbf{v}_{L} \in \mathbb{R}^{p_L}, W_{L} \in \mathbb{R}^{p_L \times p_{L-1}}$. \\ \\
+(L') $\mathbf{X}_i^{(L)} := \sigma(\mathbf{Z}_i^{(L)})$ \\ \\
+Annahme: $(\mathbf{X}_i^{(L)}, Y_i)_{i=1,...,n}$ folgt dem Modell einer linearen Regression. \\
+\end{Bem1}
+Nach Annahme über die reduzierten Daten $(\mathbf{X}_i^{(L)}, Y_i)_{i=1,...n}$ gilt mit geeignetem $W_{L+1} \in \mathbb{R}^{1 \times p_L}$ und u.i.v. $\epsilon_i$ mit $\E(\epsilon_i ) = 0$:
+\begin{equation*}
+Y_i = W_{L+1} \cdot \mathbf{X}_i^{(L)} + \epsilon _i, \quad i = 1,...n
+\end{equation*} 
+und nach dem linearen Regressionsmodel gilt für die Regressionsfunktion \cite[S. 195]{richter}
+\begin{equation*}
+f_0(x) = \E[Y_1\vert \mathbf{X}_1 = \mathbf{x}] = W_{L+1} \cdot \widetilde{f}(\mathbf{x}),
+\end{equation*}
+wobei $\widetilde{f}$ sich ergibt durch zusammenfassen der Schritte $(1),(1'),...,(L),(L')$ durch
+\begin{equation*}
+\widetilde{f}(\mathbf{x}) = \sigma \left( W_{L} \cdot \sigma \left(...W_{2} \cdot \sigma \left(W_{1} \cdot \mathbf{x} - \mathbf{v}_{1} \right) - \mathbf{v}_{2}...\right) -\mathbf{v}_{L} \right).
+\end{equation*}
+ergibt. Somit gilt $ \widetilde{f}(\mathbf{X}_i) = \mathbf{X}_i^{(L)} , \ i=1,...n$.  \\ \\
+Mithilfe der verschobenen Aktivierungsfunktion $\sigma_{\textbf{v}}: \mathbb{R}^r \rightarrow \mathbb{R}^r$:
+\begin{equation*}
+\sigma_{\textbf{v}} \left(
+\begin{array}{c}
+y_1\\
+\vdots\\
+y_r\\
+\end{array}
+\right) = \left( \begin{array}{c}
+\sigma (y_1-v_1) \\
+\vdots \\
+\sigma(y_r-v_r) \\
+\end{array}
+\right),
+\end{equation*}
+wobei  $\textbf{v} = (v_1,...,v_r) \in \mathbb{R}^r,$ können wir die Funktion $f_0$ auch schreiben als
+\begin{equation*}
+f_0: \mathbb{R}^{p_0} \rightarrow \mathbb{R}^{p_{L+1}}, \ \mathbf{x} \mapsto f_0(\mathbf{x})=	W_{L+1} \cdot \sigma_{ \textbf{v}_L} (W_{L} \cdot \sigma _{\textbf{v}_{L-1}}( \cdots W_2 \cdot \sigma _{\textbf{v}_1} (W_1 \cdot \mathbf{x}) \cdots )),
+\end{equation*}
+wobei $W_i$ eine $p_i \times p_{i-1}$ Gewichtsmatrix und $\textbf{v}_i \in \mathbb{R}^{p_i}$ Verschiebungsvektor ist. Für $p_{L+1}$ gilt $p_{L+1} = 1$, da wir bei einer Regression einen einzigen Wert schätzen wollen gegeben dem Input mit der Dimension $p_0 = d$. Im Gegensatz dazu hätten wir für ein Klassifizierungsproblem mit $K$ Klassen $ p_{L+1} = K$, wobei im \textit{k}-ten Output die Wahrscheinlichkeit (bzw. proportional zur Wahrscheinlichkeit), dass der Input der $k$-ten Klasse angehört, entspricht, vgl. \cite[S. 196]{richter}.
+\newtheorem{def3}{Definition}
+\begin{def3} {\cite[S. 196]{richter}}
+\\ Sei $L \in \mathbb{N}_0, \ \mathbf{p}=(p_0,...,p_{L+1})^T \in \mathbb{N}^{L+2}.$
+Ein neuronales Netzwerk mit Netzwerkarchitektur $(L,\mathbf{p})$ und verschobener Aktivierungsfunktion $\sigma _{\textbf{v}_{i}}: \mathbb{R}^{p_i} \rightarrow \mathbb{R}^{p_i} $ ist eine Funktion $f_0: \mathbb{R}^{p_0} \rightarrow \mathbb{R}^{p_{L+1}}$ mit 
+\begin{equation} \label{eq:12}
+f_0: \mathbb{R}^{p_0} \rightarrow \mathbb{R}^{p_{L+1}}, \ \mathbf{x} \mapsto f_0(\mathbf{x})=	W_{L+1} \cdot \sigma_{ \textbf{v}_L} (W_{L} \cdot \sigma _{\textbf{v}_{L-1}}( \cdots W_2 \cdot \sigma _{\textbf{v}_1} (W_1 \cdot \mathbf{x}) \cdots )),
+\end{equation}
+wobei $W_{l} \in \mathbb{R}^{	p_l \times p_{l-1}}, \ l = 1,...,L+1 $ Gewichtsmatrizen und $\mathbf{v}_{l} \in \mathbb{R}^{p_l}$ Verschiebungsvektoren heißen. $L$ nennen wir die Anzahl der hidden Layer/Tiefe des neuronalen Netzwerkes und $\mathbf{p}$ heißt width vector. 
+\end{def3}
+Die Netzwerkparameter sind die Einträge der Matrizen $(W_j)_{j=0,...,L}$ und der Vektoren $(\mathbf{v}_j)_{j = 1,...,L}$, die durch die Daten geschätzt bzw. gelernt werden.  
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=8cm,height=8cm,keepaspectratio]{Bilder/NNGraphmitPfeilen1.png}
+	\caption{Graphische Darstellung eines neuronalen Netzwerkes mit \textit{width vector} $\mathbf{p}=(4,3,2,1)$}
+	\label{ungerichteterGraph}
+\end{figure}
+\\Eine weitere Möglichkeit, neuronale Netzwerke einzuführen, ist über eine graphische Betrachtung. Das Netzwerk wird durch einen gerichteten azyklischen Graphen dargestellt, der die Kompositionen von Funktionen aus (\ref{eq:12}) beschreiben soll. In dieser äquivalenten Definition werden die Knoten (units) des Graphen in Layers geschichtet. Der erste bzw. letzte Layer wird Input bzw. Output Layer genannt. Alle Layers zwischen der ersten und letzten nennt man \textit{hidden Layers}, wobei die Anzahl der \textit{hidden Layers} mit $L$ bezeichnet wird. Jeder \textit{Layer} ist typischerweise vektorwertig und die Dimension bzw. die Anzahl der Knoten der \textit{Layer} bestimmen die jeweiligen Einträge des \textit{width vector} $p$, vgl. \cite[S. 165]{goodfellow}. In jedem Knoten, der nicht im Input Layer ist, wird das Skalarprodukt der Aktivierungswerte ausgehend von den Knoten im vorherigem Layer mit einem Gewichtsvektor berechnet und auf die verschobene Aktivierungsfunktion angewendet. Somit erhält man für diesen Knoten auch einen Aktivierungswert.
+\subsection{Rahmenbedingungen des Modells}
+Um eine statistische Theorie aufzubauen, müssen wir einige Eigenschaften eines neuronalen Netzwerkes fixieren, da ein allgemeines neuronales Netzwerk ohne Einschränkungen zu komplex ist, um es in einer statistischen Theorie zu fassen. Wir werden hierbei Eigenschaften wählen, die in der Praxis die besten Resultate liefern bzw. häufig vorkommen. Unser Modell soll damit alle Charakteristiken aufweisen, die ein typisches Netzwerk in der Praxis hat.\\
+Es gab schon frühere statistische Resultate, die jedoch ein eingeschränkteres und nicht der Praxis entsprechendes Modell betrachten. Diese können in \cite{pinkus} nachgelesen werden.
+\subsubsection{Aktivierungsfunktion} \label{aktivierungsfunktion}
+\begin{figure}[h] % Do not use only [h] in real documents.
+\begin{minipage}[t]{.4\linewidth}
+\includegraphics[width=0.8\textwidth]{Bilder/ReLU.png}
+\caption[Caption for LOF]{Die ReLU Funktion\footnotemark[3]}
+\end{minipage}\hfill
+\begin{minipage}[t]{.4\linewidth}
+\includegraphics[width=0.8\textwidth]{Bilder/Sigmoid.jpg}
+\caption[Caption for LOF]{Die Sigmoid Funktion\footnotemark[4]}
+\end{minipage}
+\end{figure}
+\footnotetext[3]{\cite[S. 170]{goodfellow}}\footnotetext[4]{Bernstein, Matthew: \textit{Sigmoid functions.} 2016. Verfügbar über \textless https://mbernste.githu"-b.i"-o/f"-i"-l"-e"-s/n"-o"-t"-e"-s/S"-i"-g"-m"-oidFunction.pdf\textgreater.}Wir werden in dieser Arbeit eine spezielle Aktivierungsfunktion betrachten, die ReLU (rectifier linear unit) Aktivierungsfunktion (Abb. 5)
+$\sigma: \mathbb{R} \to \mathbb{R};\quad  x \mapsto \sigma(x) = max(0,x)  = (x)_+ $. 
+\\Weitere Aktivierungsfunktionen wären zum Beispiel die Sigmoid"=Aktivierungsfunktion (Abb. 6) oder die hyperbolic tangent"=Aktivierungsfunktion. Die ReLU Funktion ist jedoch eine der erfolgreichsten und meist genutzten Aktivierungsfunktionen der heutigen Zeit, vgl. \cite[S. 8]{Enyinna}. Weshalb die ReLU Funktion anderen Aktivierungsfunktionen überlegen ist, hat vielerlei Gründe. \\
+Zum einen produziert die ReLU Funktion viele inaktive \textit{hidden units}, d.h. das Netzwerk ist \textit{sparsely connected} (dünn verbunden), vgl. \cite[S. 117]{mehlig}. Dünnbesetzte Netzwerke weisen besonders vorteilhafte Eigenschaften auf, vgl. \cite{ardakani}, wobei einer der Vorteile im Abschnitt \ref{besetzte} erläutert wird.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Bilder/ReLUSparsity.png}
+  \caption[Caption for LOF]{Ein \textit{sparse} Netzwerk mit ReLU Aktivierungsfunktion. Die roten Linien illustrieren die Verbindungen zu den aktiven Knoten.\footnotemark[5]}
+\end{figure}
+\footnotetext[5]{\cite[S. 118]{mehlig}}
+\\Wie man in Abbildung 5 sehen kann, besteht die Funktion aus zwei stückweise linearen Teilen, wodurch die Funktion \glqq annähernd\grqq \ linear ist. Aus diesen Grund bewahrt es viele Eigenschaften, die das Optimieren linearer Modelle auf Grundlage von Gradienten Methoden vereinfacht, vgl. \cite[S. 170]{goodfellow}. \\ Eines der häufigen Probleme, das in anderen Aktivierungsfunktionen, beispielsweise in der Sigmoid Funktion, vorkommt, ist das Problem des Verschwinden des Gradienten (engl.: \glqq The Vanishing Gradient Problem\grqq). Das Problem stellt ein großes Hindernis im Lernalgorithmus eines tiefen neuronalen Netzwerkes dar und führt häufig zu Ungenauigkeiten des Modells. Mehr zu dem Problem kann man in \cite{mehlig}, Abschnitt 7.2.1 nachlesen.
+\\ Zusammenfassend übertrifft die ReLU Aktivierungsfunktion in der Praxis tatsächlich andere Funktionen in Hinblick auf die statistische Performance und die Computerrechenzeit, vgl. \cite{glorot}.
+Die Wahl gegenüber anderen Aktivierungsfunktionen kommt somit natürlich.\\ \\
+Auch in der Theorie benutzen wir zwei wichtige Eigenschaften der ReLU Funktion um unser Haupttheorem \ref{thm:1} zu beweisen. Eine nützliche Besonderheit der Funktion ist, dass die ReLU Funktion eine Projektion ist, d.h. es gilt
+\begin{equation} \label{eq:21}
+\sigma \circ \sigma = \sigma.
+\end{equation}
+Wir können somit ein Signal durch mehrere Schichten senden, ohne es zu verändern. Diese Eigenschaft wird später wichtig sein für den Beweis von Theorem 1, da der Beweis auf Grundlage der Approximationstheorie aufgebaut ist. Die Approximationstheorie wiederum basiert auf der Konstruktion von kleineren Netzwerken für einfache Aufgaben, die nicht unbedingt dieselbe Netzwerktiefe haben. Um nun Teilnetzwerke zu verbinden, müssen alle dieselbe Netzwerktiefe haben. Wir realisieren dies durch Hinzufügen von hidden Layers, die den Output nicht verändern. Eine einfache Methode wäre es die Gewichtsmatrizen in den hinzugefügten Layers als Einheitsmatrix zu initialisieren (angenommen wir haben gleiche Netzwerkbreite in aufeinanderfolgenden Layers) und somit wird jetzt die Eigenschaft \eqref{eq:21} benutzt, um die Aktivierungswerte, die durch die hinzugefügten Layer gesendet werden, nicht zu verändern. Im Abschnitt \ref{Einbettung} werden wir näher auf das Verbinden von Netzwerken eingehen. Tatsächlich wird diese Methode auch in der Praxis angewendet, beispielsweise machen Residuale Netzwerke, auch ResNet genannt, davon Gebrauch. Einer der Effekte ist, dass dadurch das Lernen beschleunigt wird, wodurch Residuale Netzwerke anderen Netzwerken überlegen sind, vgl. \cite{he}. \\ \\
+Außerdem können wir mit der ReLU Aktivierungsfunktion, die Netzwerkparameter mit eins im Betrag beschränken. Falls alle Netzwerkparameter im Intervall $[-1,1]$ initialisiert werden, müssen die Netzwerkparameter im Training nur mit höchstens zwei variiert werden. Im nächsten Abschnitt werden wir motivieren, wieso es sinnvoll ist, die Netzwerkparameter mit eins im Betrag zu beschränken.
+\subsubsection{Netzwerkparameter} \label{Netzwerkparameter}
+Mit der Zeit wurden die neuronalen Netzwerke immer tiefer, vgl. \cite{schmidthuber}, womit unsere Anzahl an hidden Layers  $L$ dementsprechend hoch ist. Ein Grund für das Wachstum ist, dass man dadurch häufig bessere prognostische Treffsicherheit erlangt, vgl. \cite{eldan}. Wir haben somit eine große Menge an potentiellen Netzwerkparametern, weshalb wir die Anzahl an Netzwerkparametern nicht einschränken werden. \\ \\ Zusätzlich nehmen wir an, dass wir mehr Netzwerkparameter haben als Trainingsdaten. Diese Annahme scheint auf den ersten Blick eine starke Einschränkung zu sein, jedoch beobachten wir in der Praxis genau solche Netzwerke. Ein Beispiel wäre das bekannte AlexNet, vgl. \cite{krihevsky}, ein neuronales Netzwerk für die Objekterkennung in digitalen Bildern. Das Netzwerk besitzt 60 Millionen Netzwerkparameter, aber wurde nur auf 1.2 Millionen Trainingsdaten trainiert. Das Netzwerk erreicht trotz der Differenz an Netzwerkparameter und Trainingsdaten erstaunliche Resultate. \\ \\
+Eine weiter wichtige Eigenschaft der Netzwerkparameter, die wir berücksichtigen müssen, ist die Größe des Wertes der Parameter. Frühere statistische Resultate haben öfters die Größe der Werte der Netzwerkparameter nicht eingeschränkt, d.h. in den Resultaten steigen diese mit den Stichprobenumfang an und können somit bis unendlich wachsen, um eine bestimmte Genauigkeit zu erzielen. Falls wir nämlich erlauben, dass die Netzwerkparameter beliebig groß werden können, dann können wir die Indikatorfunktion mit 
+\begin{align} \label{large}
+x \mapsto \sigma(ax) - (ax-1)
+\end{align}
+beliebig genau approximieren, indem wir $a$ groß wählen.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Bilder/largeparameter.png}
+  \caption[Caption for LOF]{Die rote Kurve ist die Indikatorfunktion. Die blaue Kurve entsteht durch (\ref{large}) und kann für große $a$ die Indikatorfunktion beliebig gut approximieren.\footnotemark[6]}
+\end{figure}
+\\ \footnotetext[6]{\cite[Folie 7]{hieber2}}Durch diesen \glqq Trick\grqq \ kann die Approximationstheorie viele verschiedene Aussagen treffen, vgl. \cite{hieber2}. \\
+Natürlich stimmen diese Annahmen nicht mit der Praxis überein, denn dort sind die Werte typischerweise nicht sehr groß. Der Grund ist dabei, dass falls zwei aufeinanderfolgende Layers die selbe Dimension haben, werden Gewichtsmatrizen $W_j$ häufig als orthogonale Matrizen initialisiert, vgl. \cite{goodfellow}, Abschnitt 8.4. Nach Definition einer orthogonalen Matrix folgt, dass alle Einträge der Matrix im Betrag kleiner sind als eins und da nun die trainierten Parameter meistens nicht weit von den initialisierten Werten liegen, sind die trainierten Gewichtsmatrizen folglich im Wert nicht groß. 
+Wir werden somit unsere Netzwerkparameter im Betrag kleiner $1$ halten, indem wir im Lernalgorithmus die Netzwerkparameter in jeder Iteration auf $[-1,1]$ projizieren. Wir erhalten die Klasse der Netzwerkfunktionen 
+\begin{equation*}
+F(L,\mathbf{p}) := \{f  \text{ in der Form (\ref{eq:12}): } \max\limits_{j = 0, ... ,L} \Vert W_j \Vert _{\infty}  \vee \vert \mathbf{v}_j \vert _{\infty} \leq 1 \}
+\end{equation*}
+mit $\textbf{v}_0$ als Nullvektor definiert und $ \Vert W_j \Vert _{\infty}$ bezeichnet die Maximumsnorm von $W_j$.
+
+\subsubsection{Dünnbesetzte Parameter} \label{besetzte}
+Ein Problem, mit dem jedes statistische Verfahren zu kämpfen hat, sind verrauschte Daten und das damit verbundene Problem der Überanpassung an die zufällige Streuung der Daten. Bei der Überanpassung modellieren wir das \glqq Rauschen\grqq \ der Messdaten mit und würden dann für neue Testdaten, die unser Modell noch nicht gesehen hat, keine realistische Prognose abgeben. Wir können zwar mit größeren Netzwerken komplexere Aufgaben lösen, haben jedoch dadurch auch eine Neigung zum Overfitting, vgl. \cite[S. 21]{woernle}.
+Da wir hier tiefe neuronale Netzwerke betrachten, haben wir zwangsläufig ein großes Netzwerk. Wir laufen Gefahr der Überanpassung.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Bilder/overfitting.pdf}
+  \caption[Caption for LOF]{Problem des Overfittings durch tiefe neuronale Netzwerke ohne Regulierungen.\footnotemark[7]}
+\end{figure} 
+\\Ein häufiger Lösungsansatz ist, dünnbesetzte Netzwerkparameter einzuführen, d.h. viele der Parametereinträge werden auf 0 (oder nah bei 0) gesetzt. Es soll dazu führen, dass die Komplexität des Modells vereinfacht wird. Eine Möglichkeit dies Umzusetzen wäre beispielsweise die Nutzung der ReLU Aktivierungsfunktion, wie wir schon im Abschnitt \ref{aktivierungsfunktion} gesehen haben, oder einer Regulierung, wie zum Beispiel die $L^1$"=Regulierung, vgl. \cite[S. 230]{goodfellow}.\\ \\ In dieser Arbeit werden wir entsprechend der Praxis annehmen, dass wir dünnbesetzte Parameter haben. Falls $\Vert W_j \Vert _0$ die Anzahl der Einträge ungleich $0$ von $W_j$ bezeichnet, dann definieren wir ein \textit{s-sparse} Netzwerk als  \footnotetext[7]{Smith, Leslie N.: \textit{A disciplined approach to neural network hyper-parameters: Part 1 - Learning rate, batch size, momentum and weight decay.} arXiv:1803.09820. April 2018.}
+\begin{equation*} 
+\begin{split}
+F(L,\textbf{p},s) &:= F(L,\textbf{p}, s, F) \\
+                 &:= \{ f \in F(L,p): \sum_{j=0}^L \Vert W_j \Vert _0+ \vert \mathbf{v}_j \vert _0\leq s , \Vert \vert f \vert _\infty \Vert _\infty \leq F\}, 
+\end{split}
+\end{equation*}
+wobei die obere Grenze der Supremumsnorm von $f$ meistens überflüssig ist, weshalb man diese in der Notation weglässt.
+Wir betrachten also alle Netzwerkfunktionen $f \in F(L,\mathbf{p})$, deren Anzahl an nicht verschwindende Einträge der Netzwerkparameter höchstens $s$ beträgt. Wir werden uns auf Netzwerke \glqq beschränken\grqq, bei denen $s$ klein ist in Relation zu der Gesamtanzahl an Parametern im Netzwerk. Wie wir aber schon oben motiviert haben, werden in der Praxis durch Regulierungen und ReLU Funktionen \textit{s-sparse} Netzwerke auftreten mit relativ zu Gesamtanzahl an Parametern kleinen \textit{s}.
+
+\subsubsection{Hierarchische Komposition der Regressionsfunktion}
+Wir nehmen eine $\beta$-glatte Regressionsfunktion $f_0: [0,1]^d \rightarrow \mathbb{R}$ an. Durch Reskalierung des Intervalls $[0,1]^d$ können alle dargestellten Ergebnisse auf jede kompakte Menge $\mathbf{X} \subset \mathbb{R}^d$ erweitert werden.  
+Es gilt jedoch für $\beta$-glatte Funktion, wie wir schon im Abschnitt \ref{konvergenzgeschwindigkeit} gesehen haben, eine Minimax-Konvergenzrate von $n^{-2 \beta /  2\beta + d}$  für den $L_2$-Fehler, wobei $d$ die Dimension des Inputs ist. Im Abschnitt \ref{konvergenzgeschwindigkeit} haben wir schon motiviert, dass wir unter diesen Annahmen keine schnellen Konvergenzraten erreichen können. \\ \\
+In der Praxis beobachten wir jedoch was anderes: Neuronale Netzwerke scheinen den Fluch der Dimensionalität zu umgehen. Die vorherige, sehr allgemeine Modellannahme scheint damit nicht plausibel zu sein. Die Funktionsklassen, die wir schätzen wollen, müssen also viel kleiner sein als angenommen, vgl. \cite[S. 4]{lin}.\\ \\
+Es müssen zusätzliche strukturelle Annahmen an die Regressionsfunktion getroffen werden, die uns erlauben schnellere Konvergenzraten zu erreichen, um somit die Ergebnisse der Praxis zu erklären. Die Annahmen sollten dabei bei Problemen, wo neuronale Netzwerke tatsächlich bessere Ergebnisse zeigen, zutreffen. Eine heuristische Idee ist, dass neuronale Netzwerke bei Problemen, wo es möglich ist, komplexe Objekte durch einfache Objekte in einer iterativen Weise aufzubauen, gut performen. So eine Struktur nennt man auch \glqq hierarchische Struktur\grqq. Diese Idee kann aus der Physik, Mathematik und aus der Neurowissenschaft heuristisch begründet werden, vgl \cite{tegmark, tenenbaum}.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Bilder/composition.png}
+  \caption[Caption for LOF]{Beispiel einer hierarchischen Struktur: Aus Linien werden Buchstaben gebaut, aus Buchstaben werden Wörter geformt und zum Schluss werden die Wörter zu Sätzen zusammengesetzt.\footnotemark[8]}
+\end{figure} 
+
+\footnotetext[8]{\cite[Folie 13]{hieber2}}Mathematisch können wir diese hierarchische Struktur formulieren als eine Regressionsfunktion $f_0$, die aus einer Komposition von Funktionen besteht, das heißt 
+\begin{equation} \label{eq:16}
+f_0 = g_q \circ g_{q-1} \circ ... \circ g_1 \circ g_0
+\end{equation}
+mit $g_i:[a_i, b_i]^{d_i} \rightarrow [a_{i+1}, b_{i+1}]^{d_{i+1}}$, wobei $[a_i, b_i]$ ein Intervall ist. Wir bezeichnen die einzelnen Komponenten von $g_i$ mit  $g_i = (g_{ij})_{j=1,...,d_{i+1}}^T$ und $t_i$ als die maximale Anzahl an Variablen, an denen die einzelnen $g_{ij}$ abhängen. Die $g_{ij}$ sind somit $t_i$-variate Funkionen. Ein einfaches Beispiel wäre eine Bivariate Funktion $f(x,y)$, die nur von 2 Variablen abhängt. Natürlich muss immer $t_i \leq d_i$ gelten. Die fehlende Eindeutigkeit der Darstellung (\ref{eq:16}) schadet uns nicht, da wir nicht interessiert sind, wie genau $g_0,...,g_q$ und die Paare $(\beta _i, t_i$) aussehen, sondern wir werden lediglich die Eigenschaft ausnutzen, dass $f_0$ aus Kompositionen von Funktionen besteht, um damit letztendlich $f_0$ zu schätzen.
+Um zu verstehen, wie die einzelnen Dimensionen interagieren, schauen wir uns das folgende Beispiel an und ermitteln dabei $d_i$ und $t_i$:
+\begin{equation*}
+f_0(\underbrace{x_1, x_2, x_3}_{d_o = 3}) = g_{11}(\underbrace{g_{01}(\underbrace{x_3}_{t_{01} =1}), g_{02}(\underbrace{x_2}_{t_{02} = 1})}_{t_1=2}) = \underbrace{g_1( \underbrace{x_2,x_3}_{d_1=2})}_{d_2=1}.
+\end{equation*} 
+Die maximale Anzahl an Variablen, an denen $g_{01}$ und $g_{02}$ abhängen, sind $t_{01} =1$ und $t_{02}=1$. Daraus folgt, dass $t_0=1$ gilt.  \\
+In unserem $d$-variaten Regressionsmodel (\ref{eq:1}) $f_0: [0,1]^d \rightarrow \mathbb{R}$ gilt offensichtlich $d_0 = d, \ a_0 = 0, \ b_0= 1, \text{ und } d_{q+1} = 1. $ 
+Offensichtlich gibt es mehrere Möglichkeiten die Regressionsfunktion in einer Komposition zu schreiben, jedoch sollte man unter allen Möglichkeiten der Darstellung von $f_0$ immer eine auswählen, die die schnellste Konvergenzrate in Theorem \ref{thm:1} ermöglicht. \\ \\
+Einer der klassischen Ansätze der nichtparametrischen Statistik ist es anzunehmen, dass die Funktionen $g_{ij}$ in der Hölderklasse sind mit Glattheitsindex $\beta _i$ liegt. Die Definition der Hölderklasse mit Glattheitsindex $\beta$ lautet:
+\theoremstyle{equation}
+\newtheorem{def1}{Definition}
+\begin{def1}{\cite[S. 37]{gyorfi}} \label{def1}
+\\Sei $ \beta = q + s$ für ein $q \in \mathbb{N}_0$ und $ 0 < s \le 1 $. Eine Funktion $f: \mathbb{R}^d \to \mathbb{R}$ liegt in der Hölderklasse mit Glattheitsindex $\beta $, falls für jedes $\boldsymbol{\alpha} = (\alpha _1, ..., \alpha _d) \in \mathbb{N}_0 ^d$ mit  $\sum \limits_{j = 1}^{d} \alpha_j = q $ die partielle Ableitung $ \abs*{ \frac{\partial ^q m}{\partial x_1 ^{\alpha _1}...\partial x_d ^{\alpha _d}}(\mathbf{x}) - \frac{\partial ^q m}{\partial x_1 ^{\alpha _1}...\partial x_d ^{\alpha _d}}(\mathbf{z}) } \le C \cdot \Vert \mathbf{x}- \mathbf{z} \Vert ^s \ f \ddot{u} r \ alle \ \mathbf{x},\mathbf{z} \in \mathbb{R} ^d, \ wobei \ \norm{ \cdot } \ die \ euklidische \ Norm \ ist.$ 
+\end{def1}
+Eine Funktion liegt also in der Hölderklasse mit Glattheitsindex $\beta $, falls alle partiellen Ableitungen bis zum Grad $\lfloor \beta \rfloor$ existieren, beschränkt sind und die partiellen Ableitungen mit Grad $\lfloor \beta \rfloor$ sind $\beta - \lfloor \beta \rfloor$ Hölder-stetig, wobei $\lfloor \beta \rfloor$ die größte ganzzahlige Zahl ist, die strikt kleiner als $\beta$ ist. Der Ball der $\beta$-Hölder Funktionen mit Radius $K$ ist definiert als 
+\begin{align*}
+C_r ^\beta (D,K) = \biggl\{ &f:  D \subset \mathbb{R}^r \rightarrow \mathbb{R} :  \\ 
+&\sum _{\boldsymbol{\alpha}: \vert \boldsymbol{\alpha} \vert < \beta} \Vert \partial ^{\boldsymbol{\alpha}} f \Vert _\infty + \sum_{\boldsymbol{\alpha} : \vert \boldsymbol{\alpha} \vert = \lfloor \beta \rfloor} \sup_{\substack{\mathbf{x}, \mathbf{y} \in D \\ \mathbf{x}\neq \mathbf{y}}} \frac{\vert \partial ^{\boldsymbol{\alpha}} f(\mathbf{x}) - \partial ^{\boldsymbol{\alpha}} f(\mathbf{y}) \vert}{\vert \mathbf{x}-\mathbf{y} \vert _{\infty}^{\beta - \lfloor \beta \rfloor}} \leq K \biggr\},
+\end{align*}
+wobei $\partial ^{\boldsymbol{\alpha}} = \partial ^{\alpha _1}...\partial ^{\alpha _r}$ ein Multi-Index mit $\boldsymbol{\alpha} = ( \alpha _1, ..., \alpha _r) \in \mathbb{N}^r$  und $\vert \boldsymbol{\alpha} \vert := \vert \boldsymbol{\alpha} \vert _1$.
+\\ \\
+Da nun die $g_{ij}$ Hölder Glatt mit Index $\beta_i $ und $t_i$-variate Funktionen sind, gilt $g_{ij} \in C_{t_i} ^{\beta _i} ([a_i, b_i]^{t_i}, K_i)$. Wir nehmen somit an, dass unsere Regressionsfunktion $f_0$ aus einer Komposition von Funktionen in der Klasse 
+\begin{equation} \label{zusatz:17}
+\begin{split}
+G (q,\mathbf{d}, \mathbf{t}, \boldsymbol{\beta}, K) := \{ f_0 = g_q \circ ... \circ g_0: g_i = (g_{ij})_j:[a_i,b_i]^{d_i} \rightarrow [a_{i+1}, b_{i+1}]^{d_{i+1}},\\
+g_{ij} \in C_{t_i} ^{\beta _i}([a_i,b_i]^{t_i},K), \text{ für beliebige } \vert a_i \vert ,\vert b_i \vert \leq K \}
+\end{split}
+\end{equation}
+mit $\mathbf{d} := (d_0, ..., d_{q+1}), \ \mathbf{t} := (t_0, ..., t_q), \ 	\boldsymbol{\beta} := (\beta _0,..., \beta _q)$ besteht.
+\subsection{Glattheit einer kompositionalen Funktion}
+Für die Konvergenzrate in der nichtparametrischen Regression spielt die Glattheit der Funktion $f_0$ eine wichtige Rolle. Wir müssen demzufolge die Glattheit von $f_0$ berechnen, die wiederum durch die Glattheit der Funktionen $g_i$ induziert wird, da $f_0$ aus einer Komposition der Funktionen $g_i$ besteht. Aus \cite{juditsky} können wir entnehmen, wie die Glattheit einer kompositionalen Funktion induziert wird. Die Konvergenz eines Netzwerkschätzers hängt dementsprechend von dem sogenannten effektiven Glattheitsindex 
+\begin{equation} \label{eq:17}
+\beta _i ^* := \beta _i \prod \limits_{l= i+1}^{q}(\beta _l \wedge 1), \quad \quad \quad (\beta _l \wedge 1) := \min(\beta _l, 1)
+\end{equation}
+ab und wird beschrieben durch die Konvergenzrate
+\begin{equation}
+\phi _n := \max \limits_{i=0,...q} n^{- \frac{2 \beta _i ^*}{2 \beta _i ^* + t_i}}.
+\end{equation}
+Wir betrachten dazu ein kleines Beispiel mit $q=1, \ \beta _0 , \beta _1 \leq 1, \ d_0 = d_1 =  t_0 = t_1 = 1,$ dann gilt $f=g_1 \circ g_0$. Die Funktion $f$ hat somit nach (\ref{eq:17}) einen Glattheitsindex von $\beta _0 \beta _1$. Die Konvergenzrate liegt dann bei mindestens $n^{- 2 \beta _0 \beta _1 / (2 \beta _0 \beta _1 + 1)}$. Falls $\beta _1 > 1$ gilt, dann folgt $\beta _0 ^* = \beta _0  (\beta _1 \wedge 1) = \beta _0 $. Die Konvergenzrate liegt nun bei mindestens  $n^{- 2 \beta _0 / (2 \beta _0 + 1)}$. 
+\subsection{Empirisches Risiko}
+Im Deep Learning verwendet man Varianten von stochastic gradient descent (SDG) in Verbindung mit anderen Methoden, um die Verlustfunktion, die durch die log-likelihood induziert wird, zu minimieren, vgl. \cite{goodfellow}, Abschnitt 6.2.1.1. Für nichtparametrische Regressionsfunktion mit normalverteilten Fehler $\epsilon$ entspricht dies der Methode der kleinsten Quadrate, vgl. \cite[S.129]{goodfellow}. 
+Das Ziel ist es also, gegeben den Daten $D_n = {(\mathbf{X}_1, Y_ 1, ..., \mathbf{X}_n,Y_n)}$, wobei $(\mathbf{X},Y), (\mathbf{X}_1, Y_ 1), ..., (\mathbf{X}_n,Y_n)$ u.i.v. Zufallsvariablen sind, eine Netzwerkfunktion $f$ zu konstruieren, sodass das empirische Risiko $ \frac{1}{n} \sum\nolimits_{i=1}^n (Y_i - f(\mathbf{X}_i))^2$ minimal ist. Wir haben schon im Abschnitt \ref{Einleitung} gesehen, dass für den $L_2$-Risiko
+\begin{equation*}
+\E(\vert f_0(\mathbf{X} - Y \vert^2) = \inf_{f'} \E( \vert f' - Y \vert^2)
+\end{equation*} 
+gilt, wobei $f_0$ die Regressionsfunktion und das Infinimum über alle messbaren Funktionen $f':\mathbb{R}^d \rightarrow \mathbb{R}$ genommen wird. Da wir aber nicht die Regressionsfunktion berechnen können, minimieren wir das empirische Risiko, welche den $L_2$-Risiko schätzt, um die Regressionsfunktion zu berechnen. 
+Die Verlustfunktion entspricht somit einer quadratischen Verlustfunktion und wir erhalten den $L_2$-Fehler
+\begin{equation*}
+R(\widehat{f}_n, f_0) = \E (\vert \widehat{f}_n(\mathbf{X})-f_0(\mathbf{X})\vert^2)
+\end{equation*}
+als Maß der statistischen Performance, wie wir schon im Abschnitt \ref{Einleitung} motiviert haben, eines Schätzers $\widehat{f}_n$, der in der Netzwerkklasse $F(L,\mathbf{p}, s,F)$ liegt.\\
+Für einen beliebigen Schätzer $\widehat{f}_n \in F(L,\mathbf{p},s,F)$ definieren wir 
+\begin{equation} \label{zusatz:2}
+\Delta _n (\widehat{f}_n, f_0) := \E _{f_0}\left [\frac{1}{n} \sum_{i = 1}^n (Y_i - \widehat{f}_n(\mathbf{X}_i))^2 - \inf _{f \in F(L, \mathbf{p}, s,F)} \frac{1}{n}\sum_{i = 1}^n (Y_i - f(\mathbf{X}_i))^2 \right ].
+\end{equation}
+Die Folge misst die Differenz zwischen dem erwarteten empirischen Risiko von $\widehat{f}_n$ und dem globalen Minimum über alle Netzwerkfunktionen in der Klasse. Wir müssen den Term $\Delta _n$ in unserem Theorem berücksichtigen, da stochastic gradient descent Methoden nur eine kleine Chance haben das globale Minimum zu erreichen. Es ist viel wahrscheinlicher, dass man in einem lokalen Minimum bzw. Sattelpunkt stecken bleibt.
+
+\section{Hauptresultat}\label{Hauptresultat}
+Als Erinnerung: Wir untersuchen ein $d$-variates nichtparametrisches Regressionsmodel (\ref{eq:1}), dessen Regressionsfunktion $f_0$ in der Klasse $G (q,\mathbf{d}, \mathbf{t}, \boldsymbol{\beta}, K)$, definiert in (\ref{zusatz:17}), liegt. Wir betrachten hierbei einen Schätzer $\widehat{f}_n$, der aus der Netzwerkklasse $F(L,\mathbf{p},s, F)$ stammt.
+Unser Ziel ist es die Minimax-Konvergenzrate für den $L_2$-Fehler $R(\widehat{f}_n,f_0) =  \E _{f_0}[(\widehat{f}_n (\mathbf{X}) - f_0 (\mathbf{X}))^2]$ aus (\ref{eq:4}) mit $\mathbf{X} \overset{D}{=} \mathbf{X_1}$ unabhängig von einer gegebenen Stichprobe $(\mathbf{X}_i, Y_i)_i$ zu folgern. Der Index $f_0$ in $\E _{f_0}$ bezeichnet hierbei die Betrachtung des Erwartungswert, bezogen auf ein generierte Stichprobe aus dem Modell der nichtparametrischen Regression mit der Regressionsfunktion $f_0$. \\ \\
+Wir werden zunächst eine obere Schranke im Abschnitt \ref{obere} für den $L_2$-Fehler für Schätzer aus der Netzwerkklasse $F(L,\mathbf{p},s, F)$ angeben und im Abschnitt \ref{beweise} beweisen. Im Abschnitt \ref{folgerung} werden wir Folgerungen der oberen Schranke aufführen, wie zum Beispiel das Umgehen des Fluches der Dimensionalität. Im Abschnitt \ref{untere} werden wir eine untere Schranke für den $L_2$-Fehler, bewiesen in \cite{hieber}, angeben. Falls diese beiden Schranken identisch sind, können wir daraus die Minimax-Konvergenzrate folgern. Wir werden jedoch später sehen, dass unsere Schranken um den Faktor $L \log^2(n)$ abweichen, es fehlt uns damit noch an Präzision.
+\subsection{Obere Schranke des L\textsubscript{2}-Fehler} \label{obere}
+\begin{thm}\cite[S. 219]{richter} \label{thm:1}\\
+Betrachte ein $d$-variates nichtparametrisches Regressionsmodell (\ref{eq:1}), wobei die Regressionsfunktion eine Komposition aus Funktionen besteht, wie in (\ref{eq:16}) definiert, und dabei in der Klasse $G (q,\mathbf{d}, \mathbf{t}, \boldsymbol{\beta}, K)$ liegt. Sei nun $\widehat{f}_n$ ein Schätzer, der Funktionen in der Netzwerkklasse $F(L, (p_i)_{i = 0,..., L+1}, s, F)$ schätzt, wobei die Netzwerkklasse die folgenden Bedingungen erfüllt:
+\begin{itemize}
+\item[(i)] Die zur Schätzung verwendeten neuronalen Netzwerke erlauben Funktionswerte, die mindestens so groß sind wie die maximalen Funktionswerte der Regressionsfunktion $f_0$: $F \geq \max(K,1)$ 
+\item[(ii)] Für die Anzahl der Layer soll gelten: $\sum\nolimits_{i=0}^q \log _2(4t_i \vee 4 \beta _i) \log _2 n\leq L \lesssim n \phi _n$
+\item[(iii)] Die Größe der Layer muss mindestens mit Rate $n\phi_n$ in $n$ gegen unendlich gehen: $n \phi _n \lesssim \min _{i = 1,...,L} p_i$
+\item[(iv)] Anzahl der nicht verschwindende Einträge der Gewichtsmatrizen und Verschiebungsvektoren muss mit Rate $n \phi_n \log(n)$ in $n$ gegen unendlich gehen: $s \asymp n \phi _n \log n$
+\end{itemize}
+Dann existieren Konstanten C und C', die nur abhängen von q, \textbf{d}, \textbf{t}, $\boldsymbol{\beta}, F$, sodass, wenn $\Delta _n(\widehat{f}_n, f_0) \leq C \phi _n L \log ^2(n)$ gilt, dann
+\begin{equation} \label{eq:18}
+R(\widehat{f}_n, f_0) \leq C' \phi _n L \log^2(n)
+\end{equation}
+und falls $\Delta _n (\widehat{f_n}, f_0) \geq C \phi _n L \log ^2 (n)$, dann 
+\begin{equation} \label{eq:19}
+\frac{1}{C'} \Delta _n(\widehat{f}_n, f_0) \leq R(\widehat{f}_n, f_0) \leq C' \Delta _n(\widehat{f}_n, f_0).
+\end{equation}
+\end{thm}
+Die beste Wahl für $L$ um die Rate $\phi _n L \log^2(n)$ zu minimieren, ist es $L$ proportional zu $\log_2 (n)$ zu wählen. Die Anzahl der Layer sollte also mit Rate $\log_2(n)$ in $n$ gegen unendlich gehen, d.h. $L \asymp \log_2(n)$. Es folgt $\Delta _n(\widehat{f}_n, f_0) \leq C \phi _n \log^3(n)$ und damit auch
+\begin{equation*}
+R(\widehat{f}_n, f_0) \leq C' \phi _n \log^3(n).
+\end{equation*}
+Es findet in der Konvergenzrate $\phi_n$ ein Tradeoff statt: Falls $t_i$ groß ist, kann dies durch entsprechend großes $\beta^*_i$ kompensiert werden \cite[S.219]{richter}.
+\subsubsection{Folgerungen aus Theorem 1} \label{folgerung}
+Es ergibt sich aus Theorem \ref{thm:1}, dass die Konvergenzrate des $L_2$-Fehlers, unter den selben Annahmen, von $\phi_n$ und $ \Delta _n(\widehat{f}_n, f_0)$ abhängen. Aus dem Abschnitt \ref{untere} können wir entnehmen, dass $\phi_n$  die untere Grenze des Minimax des $L_2$-Fehlers über der selben Funktionsklasse, wie aus Theorem \ref{thm:1}, ist. Aus $\phi _n := \max \limits_{i=0,...q} n^{- \frac{2 \beta _i ^*}{2 \beta _i ^* + t_i}}$ können wir sehen, dass die Rate nicht mehr von der ursprünglichen Inputdimension $d$ abhängt, sondern von den $t_i$, die gegebenenfalls viel kleiner als $d$ sein können. Die $t_i$ können somit auch als die effektive Dimension angesehen werden, die es ermöglichen schnellere Konvergenzraten zu erreichen. Aufgrund dessen umgeht das Netzwerk den Fluch der Dimensionalität für bestimmte Strukturen von $f_0$.\\ Zusätzlich kommt $\Delta _n(\widehat{f}_n, f_0)$ in der unteren Grenze in (\ref{eq:19}) vor und ist somit in der Konvergenzrate unvermeidlich. Der Ausdruck $\Delta _n(\widehat{f}_n, f_0)$ nimmt einen großen Wert an, falls $\widehat{f}_n$ ein großes empirisches Risiko im Vergleich zum Minimierer des empirischen Risikos aufweist.
+Falls jedoch $\widehat{f}_n$ ein Minimierer des empirischen Risikos ist, gilt $\Delta_n = 0$ nach Definition. Die Bedingung $\Delta _n(\widehat{f}_n, f_0)  \leq C \phi _n L \log ^2(n)$ aus Theorem 1 ist in diesem Fall nun trivialerweise erfüllt, da $\Delta _n(\widehat{f}_n, f_0) = 0  \leq C \phi _n L \log ^2(n)$. Es folgt das Korollar 1.
+\newtheorem{korollar1}{Korollar}
+\begin{korollar1}
+Sei $\widetilde{f}_n \in \argmin_{f \in F(L,\mathbf{p},s,F)} \sum  _{i=1}^n(Y_i-f(\mathbf{X}_i))^2 $ der Minimierer des empirischen Risikos. Unter den selben Bedingungen, wie im Theorem \ref{thm:1}, existiert eine Konstante $C'$, die nur von $q, \mathbf{d}, \mathbf{t}, \boldsymbol{\beta}, F $ abhängt, sodass  
+\begin{equation*}
+R(\widetilde{f}_n, f_0) \leq C' \phi _n L \log^2(n).
+\end{equation*}
+\end{korollar1}
+Falls wir also ein Minimierer des empirischen Risikos finden, dann hätten wir eine obere Schranke für den $L_2$-Fehler von $\phi _n L \log^2(n)$. Leider findet man mit den Methoden, die wir heutzutage nutzen, wie beispielsweise stochastic gradient Methoden, nicht zuverlässig den Minimierer. Es wäre somit von großem Interesse eine Methode kennen zu lernen mit der man konstant ein Minimierer des empirischen Risikos finden könnte um so den Term $\Delta_n$ in der Konvergenzrate zu umgehen.  Als nächstes wollen wir uns die Bedingungen des Theorem 1 näher anschauen.\\ \\
+Die Kondition (i) aus Theorem 1 ist eine sehr milde Bedingung an die Netzwerkfunktion, da sie nur aussagt, dass die Funktion mindestens die selbe Supremumsnorm haben soll wie die Regressionsfunktion.\\ 
+Aus der Bedingung $(ii$) sehen wir, dass es für die Wahl der Netzwerktiefe $L$ ausreicht, eine obere Grenze für $t_i\le d_i$ und den Glattheitsindex $\beta_i$ zu finden. Wir haben schon gesehen, dass die beste Wahl für die Anzahl der hidden Layers $L \asymp \log_2(n)$ ist. Die Tiefe des neuronalen Netzwerkes sollte somit mit den Stichprobenumfang wachsen. \\
+Die Netzwerkbreite $\mathbf{p}$, die in der Bedingung $(iii)$ beschränkt wird, kann man unabhängig von den Glattheitsindizes wählen, indem man anstatt $n \phi _n \lesssim \min _{i = 1,...,L} p_i $ die Bedingung $n \lesssim \min _{i = 1,...,L} p_i$ erfüllt. Es gilt nämlich $\phi_n \leq 1$ und somit folgt $n \phi _n \lesssim n \lesssim \min _{i = 1,...,L} p_i$, falls $n \lesssim \min _{i = 1,...,L} p_i$ gilt. Man könnte zum Beispiel den Stichprobenumfang $n$ als Breite für jede hidden Layer  wählen.\\ 
+Aus der Bedingung \textit{(iv)} können wir folgern, dass wir ein \textit{sparse} Netzwerk vorliegen haben müssen. Der Grund liegt dabei, dass in einem \textit{fully connected} Netzwerk die Anzahl an Gewichtsparameter $\sum _{i=0}^L p_i p_{i+1}$ und für die Verschiebungsparameter $\sum_{l=1}^{L} p_L$ beträgt. Die Größenordnung der Netzwerkparameter liegt somit bei $\sum _{i=0}^L p_i p_{i+1}$. Es gilt aber
+\begin{align*}
+\sum_{i=0}^{L}p_i p_{i+1} \geq (L-1) \min_{i=1,...,L} p_i^2 
+\end{align*}
+und mit den Bedingungen \textit{(iii), (ii)} gilt
+\begin{align*}
+\sum_{i=0}^{L}p_i p_{i+1} \gtrsim \log(n)(n \phi_n)^2 - (n \phi_n)^2 
+\end{align*}
+und damit kann die Bedingung \textit{(iv}) nicht erfüllt sein. Das zeigt, dass Theorem 1 $sparse$ Netzwerke voraussetzt. Es gilt sogar, dass das Netzwerk mindestens $\sum _{i=1}^L p_i - s$ inaktive Knoten haben muss, dass heißt alle eingehenden dieser Knoten sind Null. Die Aussage kann man mit folgender Überlegung begründen: Mit einer festen Anzahl an aktiven Netzwerkparameter $s$ erreichen wir die höchste Anzahl an aktiven Knoten, indem wir keine aktiven Verschiebungsparameter, sondern nur aktive Gewichtsparameter ins Netzwerk aufnehmen. Wir haben somit $s$ aktive Gewichtsparameter. Um nun möglichst viele aktive Knoten zu generieren, verbinden wir nur zu inaktiven Knoten bis wir keine Gewichtsparameter oder keine inaktiven Knoten mehr übrig haben. Dadurch erreicht man offensichtlich höchstens $s$ aktive Knoten in den \textit{hidden Layers}. Es folgt, dass es mindestens $\sum _{i=1}^L p_i - s$ inaktive Knoten gibt.\\ 
+Die Wahl $s \asymp  n \phi _n \log (n)$ in Bedingung $(iv)$ balanciert den quadrierten Bias und die Varianz. Aus dem Beweis von Theorem \ref{thm:1} kann man entnehmen, dass die Konvergenzrate auch für andere Größenordnungen von $s$ hergeleitet werden kann. \\ \\
+Aus den Bedingungen in Theorem 1 können wir ableiten, dass wir eine sehr flexible Möglichkeit haben eine gute Netzwerkarchitektur zu wählen, solange die Anzahl der aktiven Parameter $s$ die Bedingung $(iv)$ erfüllt. Die Größe des Netzwerkes spielt somit nicht die wichtigste Rolle für die statistische Performance, sondern die richtige Regulation des Netzwerkes in Hinblick auf die Anzahl der aktiven Parameter aus Bedingung $(iv)$! \\ \\
+Der Einfachheit halber haben wir Theorem \ref{thm:1} ohne explizite Konstanten formuliert. Im Beweis hat man jedoch nicht versucht die Konstanten minimal zu halten, obwohl der Beweis nicht-asymptotisch durchgeführt wird. Es ist aber bekannt, dass Deep Learning nur andere Methoden leistungsmäßig übertreffen, falls man eine hohe Stichprobengröße hat. Somit ist die Nicht-Minimierung der Konstante bei hoher Stichprobengröße nicht mehr ausschlaggebend. Dies deutet darauf hin, dass die Methode zwar fähig ist sich der zugrunde liegende Struktur im Signal anzupassen und deswegen eine hohe Konvergenzrate erreicht, jedoch mit großen Konstanten oder übrige Terme, die die Resultate bei kleinen Stichproben beeinträchtigen.\\ \\
+Um das Theorem \ref{thm:1} zu beweisen, brauchen wir die folgende Ungleichung vom Orakel-Typus.
+
+\begin{thm} \label{thm:2}
+Betrachte ein d-variates nichtparametrische Regressionsmodel (\ref{eq:1}) mit unbekannter Regressionsfunktion $f_0$, die die Bedingung $\Vert f_0 \Vert \leq F$ für ein beliebiges $F \geq 1$ erfüllt. Sei $\widehat{f}_n $ ein beliebiger Schätzer, der Funktionen in der Netzwerkklasse $F(L,\mathbf{p}, s, F)$ schätzt, und sei $\Delta _n(\widehat{f}_n, f_0)$, wie in (\ref{zusatz:2}) definiert. Für jedes beliebige $\epsilon \in (0,1]$ existiert eine Konstante $C_\epsilon$, die nur von $\epsilon$ abhängt, sodass 
+\begin{equation*}
+\tau_{\epsilon, n} := C_\epsilon F^2 \frac{(s+1)\log(n(s+1)^Lp_0 p_{L+1})}{n},
+\end{equation*} 
+\begin{align*}
+&(1-\epsilon)^2 \Delta _n (\widehat{f}_n , f_0) - \tau_{\epsilon, n} \leq R(\widehat{f}_n, f_0) \\ &\leq (1+\epsilon)^2 \left( \inf\limits_{f \in F(L,\mathbf{p}, s, F)} \Vert f-f_0 \Vert ^2 _\infty + \Delta_n(\widehat{f}_n, f_0) \right) + \tau_{\epsilon, n}.
+\end{align*}
+\end{thm}
+Den Beweis zum Theorem 2 findet man im Appendix von \cite{hieber}. Eine Konsequenz von Theorem \ref{thm:2} ist, dass die obere Grenze des Risikos schlechter wird, falls die Anzahl der hidden Layer $L$ steigt. In der Praxis beobachtet man auch solche Ergebnisse, wo zu viele hidden Layer die Performance verschlechtern. Residuale Netzwerke (ResNet) hingegen überbrücken dieses Problem, sind jedoch nicht in der Form von (\ref{eq:12}) und müssen separat analysiert werden.\\ \\ 
+Als nächstes werden wir die untere Schranke für den $L_2$-Fehler angeben.
+
+\subsection{Untere Schranke des L\textsubscript{2}-Fehler} \label{untere}
+\begin{thm} \label{thm zusatz}
+Betrachte ein d-variates nichtparametrisches Regressionsmodell (\ref{eq:1}) mit Beobachtungen $\mathbf{X}_i$ aus einer Wahrscheinlichkeitsverteilung mit einer Lebesque Dichte auf $[0,1]^d$, welche mit einer oberen und unteren positiven Konstante beschränkt ist. Für eine beliebige nicht-negative ganze Zahl q, beliebige Dimensionsvektoren \textbf{d} und \textbf{t}, die $t_i \leq \min (d_0,..., d_{i-1})$ für alle i erfüllen, ein beliebiger Glattheitsvektor $\boldsymbol{\beta}$ und alle hinreichend großen Konstanten $K > 0$, existiert eine positive Konstante c, sodass 
+\begin{align*}
+\inf_{\widehat{f}_n} \sup_{f_0 \in G(q,\mathbf{d},\mathbf{t}, \boldsymbol{\beta}, K)} R(\widehat{f}_n, f_0) \geq c \phi_n,
+\end{align*}
+wobei das $\inf$ über alle Schätzer $\widehat{f}_n$ genommen wird.
+\end{thm}
+Der Beweis zu Theorem \ref{thm zusatz} befindet sich im Appendix von \cite{hieber} und wird hier nicht weiter diskutiert.\\
+Wir sehen durch das Theorem \ref{thm zusatz}, dass $\phi_n$ eine untere Schranke für den Minimax $L_2$-Fehler über der Funktionsklasse $G(q,\mathbf{d},\mathbf{t}, \boldsymbol{\beta}, K)$ ist. Wir erinnern uns, dass das Theorem \ref{thm:1} uns eine obere Schranke für den $L_2$-Fehler für einen Schätzer aus der Netzwerkklasse $F(L,\mathbf{p},s, F)$ über der Klasse $G(q,\mathbf{d},\mathbf{t}, \boldsymbol{\beta}, K)$ angibt. Falls nun beide Schranken übereinstimmen würden, könnten wir aus den beiden (identischen) Schranken herleiten, dass Schätzer aus dünnbesetzten tiefen neuronalen Netzwerken die Minimax-Konvergenzrate erreichen. Da wir für den $L_2$-Fehler aber einerseits eine untere Schranke mit $\phi_n$ und andererseits eine obere Schranke für Schätzer aus $F(L,\mathbf{p},s, F)$ mit $\phi_n L \log^2(n)$ haben, womit unsere Schranken nicht übereinstimmen, besitzen wir hier noch eine Lücke in unserer Theorie. Es könnte somit sein, dass unsere untere Schranke aus Theorem \ref{thm zusatz} oder unsere obere Schranke aus Theorem \ref{thm:1} zu ungenau sind. Johannes Schmidt-Hieber vermutet, dass der Faktor $L \log^2(n)$ aus der oberen Schranke vom Theorem \ref{thm:1} ein Artefakt vom Beweis ist. \\ Wir können aus Theorem \ref{thm:1} und \ref{thm zusatz} eine Minimax-Konvergenzrate angeben, die bis zu $L\log^2(n)$ abweicht.
+\subsection{Beweise} \label{beweise}
+\subsubsection{Einbettungseigenschaften einer Netzwerkfunktionsklasse} \label{Einbettung}
+In diesem Abschnitt seien $\mathbf{p} = (p_0,..., p_{L+1})$ und $\mathbf{p'} = (p_0',..., p_{L+1}')$.\\ Um eine Funktion durch ein Netzwerk zu approximieren, müssen wir im ersten Schritt Netzwerke konstruieren, die jeweils einfache Aufgaben bewältigen. Um nun zwei Netzwerke zu verbinden, benutzen wir die folgende Regeln:\\ \\
+\textit{Größenvergleich:} Es gilt $F(L,\mathbf{p},s) \subseteq F(L,\mathbf{q}, s')$, falls $\mathbf{p} \leq \mathbf{q}$ komponentenweise gilt und $s \leq s'$. \\ \\
+\textit{Komposition}: Es seien $f \in F(L,\mathbf{p})$ und $g \in F(L', \mathbf{p}')$ zwei Netzwerke mit derselben Anzahl an $p_{L+1} = p_0'$. Für einen Vektor $\mathbf{v} \in \mathbb{R}^{p_{L+1}}$ definieren wir die Komposition der Netzwerke als $g \circ \sigma_{\mathbf{v}}(f)$, die in der Netzwerkklasse $F(L+L'+1, (\mathbf{p}, p_1',..., p_{L'+1}'))$ liegt. In den meisten Fällen werden wir annehmen, dass der Output des ersten Netzwerkes nicht-negativ ist und dass der Verschiebungsvektor $\mathbf{v}$ Null ist.\\ \\
+\textit{Layers hinzufügen/Netzwerktiefe angleichen}: Um die Anzahl an hidden Layers für zwei Netzwerke anzugleichen, können wir zusätzliche Layers im Input hinzufügen, die das Signal nicht verändern. Wir erreichen dies, indem wir die Gewichtsmatrizen der hinzugefügten Layer als Einheitsmatrix initialisieren, sodass
+\begin{equation*}
+F(L, \mathbf{p}, s) \subset F(L+q, (\underbrace{p_0,...,p_0}_{q \text{-mal}},\mathbf{p}), s+qp_0).
+\end{equation*}
+Wie wir schon im Abschnitt \ref{aktivierungsfunktion} motiviert haben, nutzen wir hier die Eigenschaft der Projektion der ReLU Aktivierungsfunktion.\\ \\
+\textit{Parallelisierung}: Es seien $f,g$ zwei Netzwerke mit der gleichen Anzahl an hidden Layers und gleichen Inputdimension, d.h. $f \in F(L, \mathbf{p})$ und $g \in F(L,\mathbf{p}')$ mit $p_0 = p_0'$. Das \textit{parallele} Netzwerk $(f,g)$ berechnet $f$ und $g$ simultan in einem gemeinsamen Netzwerk, welches in der Klasse $F\left(L,(p_0,p_1+p_1',..., p_{L+1}+p_{L+1}')\right)$ liegt.
+\begin{figure}[h] % Do not use only [h] in real documents.
+\begin{minipage}[t]{.45\linewidth}
+\includegraphics[width=0.8\textwidth]{Bilder/para1.png}
+\label{ReLU}
+\end{minipage}\hfill
+\begin{minipage}[t]{.45\linewidth}
+\includegraphics[width=0.8\textwidth]{Bilder/para3.png}
+\label{Sigmoid}
+\end{minipage}
+\caption[Caption for LOF]{Beispiel für ein gemeinsames Netzwerk für $f \in F(2,(2,3,3,1))$, $g \in F(2,(2,3,2,1))$ und somit $(f,g) \in F(2,(2,6,5,2))$.\footnotemark[9]}
+\end{figure}
+\footnotetext[9]{Erstellt in http://alexlenail.me/NN-SVG/LeNet.html, letzter Zugriff: 26.06.2019}\\ \\
+\textit{Beseitigung der inaktiven Knoten}: Es gilt
+\begin{equation*}
+F(L,\mathbf{p},s) = F\left(L, (p_0, p_1 \wedge s, p_2 \wedge s, ..., p_L \wedge s, p_{L+1}),s\right).
+\end{equation*}
+Wir zeigen die Aussage, indem wir zunächst ein Netzwerk $f(x) = W_L \sigma_{\mathbf{v}_L} W_{L-1}...\sigma_{\mathbf{v}_1} W_0 \mathbf{x} \in F(L,\mathbf{p},s)$ betrachten. Sind alle Einträge der $j$-ten Spalte von $W_i$ Null, dann können wir die Spalte zusammen mit der $j$-ten Zeile von $W_{i-1}$ und dem $j$-ten Eintrag von $\mathbf{v}_i$ entfernen ohne die Funktion zu verändern. Das zeigt, dass $f \in F(L,(p_0,..., p_{i-1},p_i - 1, p_{i+1},...,p_{L+1}),s).$ In der Abbildung 12 haben wir eine graphische Betrachtung dieses Verfahrens.
+\begin{figure}[h]
+\begin{minipage}[t]{.45\linewidth}
+  \includegraphics[width=1\textwidth]{Bilder/beseitigung.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{.45\linewidth}
+\includegraphics[width=1\textwidth]{Bilder/beseitigung2.png}
+\label{Sigmoid}
+\end{minipage}
+  \caption[Caption for LOF]{\textit{Graphische Darstellung:} Alle ausgehenden Signale des 2. Knotens im 1. hidden Layer sind 0, d.h. die 2. Spalte von $W_2$ ist 0. Man erkennt, dass alle eingehenden Signale zu diesem Knoten \glqq irrelevant\grqq \ sind, da kein Signal weitergeleitet wird. Somit können wir die 2. Zeile von $W_1$ und den entsprechenden Verschiebungsvektor weglassen.}
+\end{figure} 
+\\Da nun höchstens $s$ aktive Parameter existieren, haben wir mindestens $(p_i - s)$ inaktive Knoten im Layer $i$. Daraus lässt sich schließen, dass wir die Prozedur mindestens $(p_i - s)$-mal für jedes beliebiges $i = 1,...,L$ iterieren können. Das zeigt $f \in F(L, (p_0, p_1 \wedge s, p_2 \wedge s, ..., p_L \wedge s, p_{L+1}),s)$. \\ \\
+Im Beweis werden wir Gebrauch von der Tatsache machen, dass für ein \textit{fully connected} Netzwerk in $F(L,\mathbf{p})$ es $\sum _{l=0}^{L} p_l p_{l+1}$ Gewichtsparameter und $\sum_{l=1}^{L} p_l$ Verschiebungsparameter gibt. Insgesamt haben wir also 
+\begin{equation*}
+\sum _{l=0}^{L} p_l p_{l+1} - \sum_{l=1}^{L} p_l = \sum _{l=0}^{L} p_l p_{l+1} - \left(\sum_{l=0}^{L} p_{l+1} - p_{L+1} \right)= \sum\limits_{l=0}^L(p_l - 1)p_{l+1} + p_{L+1}
+\end{equation*}
+Parameter.
+\subsubsection{Approximationsqualität neuronaler Netzwerke}
+Am Ende dieses Abschnittes werden die Resultate zeigen, dass wir jede Funktion, die in der Hölderklasse mit Glattheitsindex $\beta$ liegen, durch ein neuronales Netzwerk geeigneter Größe annähern können. Wir werden das Theorem nicht beweisen, wollen aber eine Beweisskizze führen für mindestens einmal differenzierbare Funktionen $h: [0,1]^d \rightarrow \mathbb{R}$, die sehr analog läuft wie für Funktionen, die in der Hölderklasse mit Glattheitsindex $\beta$ liegen. Wir werden dabei die Frage beantworten, wie viele Layer und welche Dimensionen der Layer hinreichend sind, um solche Funktionen zu approximieren. \\ \\
+Die Idee ist es, die Funktion $h$ in Terme zu zerlegen, die nur aus Produkten bestehen, die wir dann durch Netzwerke annähern können. Da $h$ mindestens einmal differenzierbar ist, besitzt $h$ eine Taylor-Entwicklung. Die Taylor-Entwicklung ermöglicht es, die Funktion in Produkten $x_{i_1}^{\alpha_1} \cdot \ldots \cdot x_{i_1}^{\alpha_1}$ mit $\alpha_1, \ldots, \alpha_d \in \mathbb{N}_0$ zu beschreiben. Produkte zwischen $r$ Variablen sind nur mehrmalige Anwendungen von Produkten zweier Variablen. Im ersten Schritt müssen wir also ein Netzwerk konstruieren, welches das Produkt zwischen zwei Variablen annähert, d.h. die Funktion 
+\begin{equation*}
+\text{mult: }[0,1]^2 \rightarrow [0,1], \quad \text{mult}(x,y) = x \cdot y
+\end{equation*} 
+approximiert, gegeben den Input $x$ und $y$. Falls wir nämlich dieses Problem gelöst haben, dann können wir auch Produkte zwischen $r$ Variablen durch ein Netzwerk berechnen und damit auch die Taylor-Entwicklung der gesuchten Funktion $h$. Die zwei folgenden Lemmata lösen das Problem des Multiplizieren von zwei Variablen. Die Beweise der folgenden Lemmata können im Appendix von \cite{hieber} nachgeschlagen werden.
+
+\begin{lemma} \cite[S.214]{richter} \\
+Sei $g: \mathbb{R} \rightarrow \mathbb{R}, \ g(x) := x(1-x)$ und 
+\begin{equation*}
+T^k: [0,2^{2-2k}] \rightarrow [0,2^{-k}], \quad T^k(x) := \sigma (\frac{x}{2}) - \sigma(x- 2^{1-2k}), 
+\end{equation*}
+sowie $R^k: [0,1] \rightarrow [0,2^{-k}], \ R^k(x) 	:= T^k \circ T^{k-1} \circ \ldots \circ T^1.$ Dann gilt 
+\begin{equation*}
+\forall x \in [0,1]: \quad \vert \sum_{k=1}^m R^k(x) - g(x) \vert \leq 2^{-m}.
+\end{equation*}
+\end{lemma}
+Das Lemma zeigt, dass wir mit der Funktion $\sum_{k=1}^m R^k$ die Funktion $x(1-x)$ exponentiell schnell in $m$ approximieren können. Es gilt insbesondere $x(1-x) = \sum_{k=1}^\infty R^k(x)$ in $L^{\infty} [0,1]$. Unter Nutzung der Polarisationsgleichung
+\begin{equation*}
+g\left( \frac{x-y+1}{2} \right) - g \left( \frac{x+y}{2} \right) + \frac{x+y}{2} - \frac{1}{4} = x \cdot y
+\end{equation*} 
+können wir zusammen mit dem vorherigen Lemma die Funktion $\mathrm{mult}(x,y)$ approximieren:
+\begin{lemma}\cite[S.3 im Appendix]{hieber}
+\\Für jede positive Zahl $m$, existiert ein Netzwerk $\mathrm{mult}_m \in F(m+4, (2,6,6, \ldots , 6,1))$, sodass $\mathrm{mult}_m (x,y) \in [0,1]$ mit 
+\begin{equation*}
+\vert \mathrm{mult}_m(x,y) - \mathrm{mult}(x,y) \vert \leq 2^{-m}, \quad \text{für alle }x,y \in [0,1]
+\end{equation*} 
+und $\mathrm{mult}_m (0,y) = \mathrm{mult}_m(x,0) = 0.$	
+\end{lemma} 
+Eine interessante Folgerung des Lemmas ist, dass wir mit tieferen Netzwerken, die Multiplikation von zwei Zahlen $x$ und $y$ besser approximieren können.
+Mittels Parallelisierung, siehe Abschnitt \ref{Einbettung}, werden wir Netzwerke aus $\mathrm{mult}_m$ zu einem Netzwerk zusammenfassen, welche die Multiplikation für $r$ Variablen berechnet. Mithilfe des Lemma 2 können wir die Resultate auf die Multiplikation mit $r$ Variablen erweitern.
+\begin{lemma} \label{lemma3} \cite[S.4 im Appendix]{hieber} \\
+Für jede positive ganze Zahl $m$, existiert ein Netzwerk 
+\begin{equation*}
+\mathrm{mult}_m^r \in F((m+5) \lceil \log_2r \rceil, (r,6r, 6r, \ldots, 6r, 1)),
+\end{equation*}
+sodass $\mathrm{mult}_m^r \in [0,1]$ und 
+\begin{equation*}
+\big\vert \mathrm{mult}_m^r(\mathbf{x}) - \prod_{i=1}^r x_i \big\vert \leq r^2 2^{-m}, \quad \text{für alle } \mathbf{x} = (x_1, \ldots, x_r) \in [0,1]^r. 
+\end{equation*}
+Außerdem gilt $\mathrm{mult}^r_m (\mathbf{x}) = 0$, falls einer der Komponenten von $\mathbf{x}$ Null ist.
+\end{lemma} 
+Auch hier sehen wir, dass tiefere Netzwerke die Multiplikation zwischen mehreren Variablen besser approximieren.
+Mit diesem Lemma können wir nun Produkte mit mehreren Variablen durch ein neuronales Netzwerk approximieren, d.h. wir können auch die Taylor-Entwicklung der Funktion $h$ approximieren. Ist $k \in \mathbb{N}$ und $h$ $k$-mal stetig partiell differenzierbar, so lautet das Taylor-Polynom der Ordnung $k$ an einer Stelle $\mathbf{a} \in [0,1]^d$  
+\begin{equation} \label{eq:zusatz16}
+P_\mathbf{a}^{k-1} h(\mathbf{x}) = \sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d, 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1} (\partial^{\boldsymbol{\alpha}} h) (\mathbf{a}) \frac{(\mathbf{x}-\mathbf{a})^{\boldsymbol{\alpha}}}{\boldsymbol{\alpha!}},
+\end{equation} 
+wobei $\partial^{\boldsymbol{\alpha}} h := \partial_{x_1^{\boldsymbol{\alpha}_1}} \ldots \partial_{x_d^{\alpha_d}}, \ \Vert \boldsymbol{\alpha} \Vert_1 = \sum_{j=1}^d \alpha_j, \ \boldsymbol{\alpha}! := \alpha_1! \cdot \ldots \cdot \alpha_d!$ und $v_1^{\alpha_1} \cdot \ldots \cdot v_d^{\alpha_d}$ für $\mathbf{v} \in \mathbb{R}^d$, vgl. \cite[S.214]{richter}. \\
+Durch die Restgliedabschätzung aus dem Satz von Taylor können wir folgern, dass falls $\sup_{\boldsymbol{\alpha} \in \mathbb{N}^d_0, \Vert \boldsymbol{\alpha} \Vert_1 = k} \sup_{\mathbf{x} \in [0,1]^d} \vert \partial^{\boldsymbol{\alpha}} h \vert \leq K$ mit einer Konstanten $K \in \mathbb{R}$, dann gilt $\forall \mathbf{x} \in [0,1]^d$:
+\begin{equation} \label{eq:zusatz17}
+\vert h (\mathbf{x}) - P_{\mathbf{a}}^{k-1} h(\mathbf{x}) \vert \leq \frac{K}{k!} \vert \mathbf{x} - \mathbf{a} \vert^k_\infty,
+\end{equation}
+vgl. \cite[S. 215]{richter}.
+Aus der Ungleichung (\ref{eq:zusatz17}) sehen wir, dass wir durch einen Punkt $\boldsymbol{a} \in [0,1]^d$ eine Approximation von $h$ mit Taylor keine besseren Resultate erlangen können als eine obere Schranke von $\frac{K}{k!} \vert \mathbf{x} - \mathbf{a} \vert^k_\infty$. Da wir im Intervall $[0,1]^d$ beschränkt sind, entspricht die Schranke in vielen Fällen der Form $\frac{K}{k!} \cdot \frac{1}{2^k}$. Wir können also mit einem neuronalen Netzwerk mittels dem Lemma \ref{lemma3} so beliebig gut $P_{\mathbf{a}}^{k-1} h(\mathbf{x})$ approximieren wir wir wollen, wir würden trotzdem eine zu grobe Abschätzung mit $\frac{K}{k!} \cdot \frac{1}{2^k}$ erhalten. \\ \\
+Um die Ungleichung (\ref{eq:zusatz17}) besser auszunutzen, wird der Inputraum in kleine Hyperwürfel aufgeteilt, worauf wir auf jeden dieser Hyperwürfel eine lokale Taylorreihe durch Netzwerke approximieren werden.
+Die Zerteilung in Hyperwürfel wird wie folgt vorgenommen:
+\begin{equation*}
+D(M) := \{ \mathbf{a}^{(r)} := (\frac{r_j}{M})_{j=1,...,d} : r=(r_1, \ldots, r_d) \in \{0,1, \ldots, M \}^d \} \subset [0,1]^d
+\end{equation*}
+Wir nennen $D(M)$ auch Gitter. Als nächstes wird $h$ je nach Argument von $x$ mit dem Taylorpolynom, welches zu dem Gitterpunkt gehört, der am nächsten an $x$ liegt, approximiert, vgl. \cite[S. 215]{richter}.
+\begin{equation*}
+P^{k-1}h(\mathbf{x}) := \sum_{\mathbf{a}^{(r)} \in D(M)} P^{k-1}_{\mathbf{a}^{(r)}} h(\mathbf{x}) \cdot \prod_{j=1}^d\left(1- M \cdot \vert x_j - a_j^{(r)} \vert \right)_+
+\end{equation*}
+Wir können das Polynom $P_{\mathbf{a}}^{k-1} h$ aus (\ref{eq:zusatz16}) durch Ausmultiplizieren als eine Linearkombination von Monomen 
+\begin{equation} \label{eq:zusatz18}
+P_{\mathbf{a}}^{k-1} h(\mathbf{x}) = \sum_{\boldsymbol{\gamma} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\gamma} \Vert _1 \leq k-1}c_{\boldsymbol{\gamma}} \cdot \mathbf{x}^{\boldsymbol{\gamma}},
+\end{equation}  
+für ein geeigneten Koeffizienten $c_{\boldsymbol{\gamma}}$ schreiben, wobei $\boldsymbol{\gamma} \in \mathbb{N}^d_0$ ein Multi-Index ist. Aus (\ref{eq:zusatz18}) sehen wir, dass $\partial^{\boldsymbol{\gamma}} P_{\mathbf{a}}^{k-1} h(\mathbf{x})\vert_{\mathbf{x} = 0} = \boldsymbol{\gamma}!c_{\boldsymbol{\gamma}}$ gilt. Falls wir nun den Term $\partial^{\boldsymbol{\gamma}}P_{\mathbf{a}}^{k-1} h(\mathbf{x})\vert_{\mathbf{x}=0}$ mit der Gleichung (\ref{eq:zusatz16}) bilden, dann gilt
+\begin{align*}
+\partial^{\boldsymbol{\gamma}}P_{\mathbf{a}}^{k-1} h(\mathbf{x})\vert_{\mathbf{x}=0} &=  \sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1, \boldsymbol{\gamma} \leq \boldsymbol{\alpha}} (\partial^{\boldsymbol{\alpha}}h)(\mathbf{a}) \cdot \frac{ \boldsymbol{\alpha}!(-\mathbf{a})^{\boldsymbol{\alpha} - \boldsymbol{\gamma} }}{(\boldsymbol{\alpha} - \boldsymbol{\gamma})! \boldsymbol{\alpha}!}\\
+&=\sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1, \boldsymbol{\gamma} \leq \boldsymbol{\alpha}} (\partial^{\boldsymbol{\alpha}}h)(\mathbf{a}) \cdot \frac{ (-\mathbf{a})^{\boldsymbol{\alpha} - \boldsymbol{\gamma} }}{(\boldsymbol{\alpha} - \boldsymbol{\gamma})!}\\ 
+&= \boldsymbol{\gamma}! \sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1, \boldsymbol{\gamma} \leq \boldsymbol{\alpha}} (\partial^{\boldsymbol{\alpha}}h)(\mathbf{a}) \cdot \frac{(-\mathbf{a})^{\boldsymbol{\alpha} - \boldsymbol{\gamma} }}{\boldsymbol{\gamma}!(\boldsymbol{\alpha} - \boldsymbol{\gamma})!}.
+\end{align*}
+Es folgt somit
+\begin{equation*}
+c_{\boldsymbol{\gamma}} := \sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1, \boldsymbol{\gamma} \leq \boldsymbol{\alpha}} (\partial^{\boldsymbol{\alpha}}h)(\mathbf{a}) \cdot \frac{(-\mathbf{a})^{\boldsymbol{\alpha} - \boldsymbol{\gamma}}}{\boldsymbol{\gamma}!(\boldsymbol{\alpha} - \boldsymbol{\gamma})!}.
+\end{equation*}
+Man schreibt $\boldsymbol{\gamma} \leq \boldsymbol{\alpha},$ falls für alle $j \in \{1,\ldots,d \}: \ \gamma_j \leq \alpha_j$ gilt. \\ \\
+Wir können nun die Terme $x^{\boldsymbol{\gamma}}$ in
+\begin{equation*} 
+P_{\mathbf{a}}^{k-1} h(\mathbf{x}) = \sum_{\boldsymbol{\gamma} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\gamma} \Vert _1 \leq k-1}c_{\boldsymbol{\gamma}} \cdot x^{\boldsymbol{\gamma}}, \qquad c_{\boldsymbol{\gamma}} := \sum_{\boldsymbol{\alpha} \in \mathbb{N}_0^d: 0 \leq \Vert \boldsymbol{\alpha} \Vert _1 \leq k-1, \boldsymbol{\gamma} \leq \boldsymbol{\alpha}} (\partial^{\boldsymbol{\alpha}}h)(\mathbf{a}) \cdot \frac{(-\mathbf{a})^{\boldsymbol{\alpha} - \boldsymbol{\gamma}}}{\boldsymbol{\gamma}!(\boldsymbol{\alpha} - \boldsymbol{\gamma})!}, 
+\end{equation*} 
+mittels dem Lemma \ref{lemma3} diskutieren und erhalten damit das folgende Theorem:
+\begin{thm} \cite[S.215]{richter} \label{thm:zusatz4}\\
+Ist $h: [0,1]^d \rightarrow \mathbb{R}$ k-mal partiell differenzierbar und gilt $\sup_{\boldsymbol{\alpha} \in \mathbb{N}_0^d, \Vert \boldsymbol{\alpha} \Vert_1 =k} \sup _{\mathbf{x} \in [0,1]^d} \vert \partial^{\boldsymbol{\alpha}} h \vert \leq K$, so gibt es für alle $m,N \in \mathbb{N}$ mit $N \geq \max \{(k+1)^d, K+1\}$ ein 
+\begin{equation*}
+\widetilde{f} \in F(L,(d,12dN,\ldots, 12dN,1)), \quad L = 8+(m+5)(1+\lceil \log_2d \rceil),
+\end{equation*}
+sodass 
+\begin{equation*}
+\forall \mathbf{x} \in [0,1]^d: \vert h(\mathbf{x}) - \widetilde{f}(\mathbf{x}) \vert \leq (2K+1) 3^{d+1} N 2^{-m} + K 2^k N^{-k/d}
+\end{equation*}
+\end{thm}
+Das Theorem \ref{thm:zusatz4} zeigt, dass wir mindestens einmal differenzierbare Funktionen durch ein neuronales Netzwerk geeigneter Größe approximieren können. In \cite[Appendix]{hieber} wird sogar gezeigt, dass wir tatsächlich die allgemeineren Funktionen, die in der Hölderklasse mit Glattheitsindex $\beta$ liegen, durch ein neuronales Netzwerk annähern können. 
+
+\begin{thm} \label{thm:3}
+Für jede beliebige Funktion $h\in C_r^\beta ([0,1]^r, K)$ und jede beliebige ganze Zahl $m \geq 1$ und $N \geq (\beta + 1)^r \vee (K+1)e^r$, existiert ein Netzwerk 
+\begin{equation*}
+\widetilde{f} \in F (L, (r,6(r+\lceil\beta\rceil)N,..., 6(r+\lceil\beta\rceil)N, 1),s,\infty)
+\end{equation*}
+mit der Tiefe 
+\begin{equation*}
+L = 8 + (m + 5)(1+\lceil \log_2(r\vee \beta)\rceil)
+\end{equation*}
+und die Anzahl an Parameter 
+\begin{equation*}
+s \leq 141(r+\beta+1)^{3+r}N(m+6),
+\end{equation*}
+sodass 
+\begin{equation*}
+\Vert \widetilde{f} - h \Vert _{L^\infty([0,1]^r)} \leq (2K+1)(1+r^2+ \beta ^2)6^rN2^{-m}+K 3^\beta N^{- \frac{\beta}{r}}. 
+\end{equation*}
+\end{thm}
+Der Beweis verläuft analog zu unserer Beweisskizze für mindestens einmal differenzierbare Funktionen und kann im Appendix von \cite{hieber} nachgeschlagen werden. Der Unterschied fängt bei der Betrachtung der Taylor-Reihe an, da wir hier nun beachten müssen, dass wir Funktionen betrachten, die in der Hölderklasse liegen und nicht mindestens einmal differenzierbar sind. Die Güte der Näherung von Theorem \ref{thm:zusatz4} und Theorem \ref{thm:3} wird durch $N$ und $m$ bestimmt. $N$ beschreibt dabei die Anzahl der Gitterpunkte von $D(M)$, da wir im Beweis $M$ maximal wählen, sodass $(M+1)^d = \#D(M) \leq N$ gilt. Falls wir $m$, $N$ groß wählen und deren Balancierung untereinander beachten, dann kann die Abschätzung in den zwei Theoremen beliebig klein werden. \\ \\
+Mit Theorem \ref{thm:3} können wir nun ein Netzwerk konstruieren, das die gesuchte Funktion $f_0 = g_q \circ ... \circ g_0$ approximiert, indem wir die einzelnen Komponenten mit dem Theorem annähern. Wie im Theorem \ref{thm:1} nehmen wir an, dass $g_{ij} \in C_{t_i}^{\beta_i} ([a_i,b_i]^{t_i}, K_i)$ und zusätzlich o.B.d.A., dass $K_i \geq 1$. Theorem \ref{thm:3} setzt jedoch voraus, dass die zu approximierende Funktion im Intervall $[0,1]^r$ liegt. Deshalb zeigen wir im ersten Schritt, dass wir die Funktion $f_0$ immer als Komposition von Funktionen, die definiert sind auf einem Hyperwürfel $[0,1]^{t_i}$, schreiben können. Für $i= 1,...,q-1$ definiere 
+\begin{equation*}
+h_0 := \frac{g_0}{2K_0} + \frac{1}{2}, \qquad h_i := \frac{g_i(2K_{i-1} \cdot - K_{i-1})}{2K_i} + \frac{1}{2}, \qquad h_q = g_q(2K_{q-1} \cdot - K_{q-1}).
+\end{equation*}
+Für $2K_{i-1} \mathbf{x} - K_{i-1}$ berechnen wir die Einträge durch $2K_{i-1} x_j - K_{i-1}$ für alle $j$. Offensichtlich gilt 
+\begin{equation} \label{eq:26}
+f_0 = g_q \circ ... \circ g_0 = h_q \circ ... \circ h_0.
+\end{equation}
+Zum Beispiel für $q=2$ gilt:
+\begin{align*}
+& h_1 \circ h_0 = h_1(h_0)= \frac{g_1(2K_{0} h_0 - K_{0})}{2K_1} + \frac{1}{2} 
+= \frac{g_1\left(2K_{0} \left(\frac{g_0}{2K_0} + \frac{1}{2}\right) - K_{0} \right)}{2K_1} + \frac{1}{2} 
+= \frac{g_1(g_0)}{2K_1} + \frac{1}{2} \\
+& h_2 \circ h_1\circ h_0 = h_2( h_1 \circ h_0 ) = g_2 \left(2K_1 \left(\frac{g_1(g_0)}{2K_1} + \frac{1}{2} \right) - K_1 \right) = g_2\left(g_1\left(g_0 \right) \right) = g_2 \circ g_1 \circ g_0.
+\end{align*}
+Wir wollen nun die $h_{ij}$ weiter analysieren. Da $g_{0j} \in C_{t_0} ^{\beta_0}([0,1]^{t_0},K_0)$ folgt, dass $h_{0j} = \frac{g_{0j}}{2K_0} + \frac{1}{2} \in C_{t_0} ^{\beta_0}([0,1]^{t_0},1)$. Weiterhin gilt somit $ h_{ij} \in C_{t_i}^{\beta_i}([0,1]^{t_i},(2K_{i-1})^{\beta_i})$ für $ i = 1,..., q-1$ und $h_{qj} \in C_{t_	q} ^{\beta _q}([0,1]^{t_q}, K_q (2K_{q-1})^{\beta _q})$. Ohne Beschränkung der Allgemeinheit nehmen wir an, dass die Radien der Hölder Bälle mindestens eins ist, also $K_i \geq 1$.
+\begin{lemma} \label{lemma:1}
+Sei $h_{ij}$ wie oben definiert mit $K_i \geq 1$. Dann gilt für jede beliebige Funktion $\widetilde{h}_i = (\widetilde{h}_{ij})_j^\top$ mit $\widetilde{h}_{ij}:[0,1]^{t_i} \rightarrow [0,1],$
+\begin{align*}
+& \Vert h_q \circ ... \circ h_0 - \widetilde{h}_q \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} \\
+& \leq K_q  \prod\limits_{l=0}^{q-1} (2K_l)^{\beta _{l+1}} \sum\limits_{i=0}^{q} \Vert \vert h_i - \widetilde{h}_i \vert_\infty \Vert _{L^\infty[0,1]^{d_i}} ^{\prod_{l=i+1}^q \beta _l \wedge 1}. 
+\end{align*}
+\end{lemma} 
+\begin{proof} [Beweis.]
+Definiere $H_i = h_i \circ ... \circ h_0$ und $\widetilde{H}_i = \widetilde{h}_i \circ ... \circ \widetilde{h}_0.$ Falls $Q_i$ ist eine obere Schranke für die Hölder Konstante von $h_{ij}, j = 1,..., d_{i+1}$, dann gilt mit der Dreiecksungleichung 
+\begin{align*}
+& \left\vert H_i(\mathbf{x}) - \widetilde{H}_i(\mathbf{x}) \right\vert_\infty  = \left\vert h_i \circ H_{i-1}(\mathbf{x}) - \widetilde{h}_i \circ \widetilde{H}_{i-1}(\mathbf{x})\right\vert _\infty \\
+& = \left\vert h_i \circ H_{i-1}(\mathbf{x}) - h_i \circ \widetilde{H}_{i-1}(\mathbf{x}) + h_i \circ \widetilde{H}_{i-1}(\mathbf{x}) - \widetilde{h}_i \circ \widetilde{H}_{i-1}(\mathbf{x})\right\vert _\infty \\
+& \leq \left\vert h_i \circ H_{i-1} (\mathbf{x}) - h_i \circ \widetilde{H}_{i-1} (\mathbf{x}) \right\vert_\infty + \left\vert h_i \circ \widetilde{H}_{i-1} (\mathbf{x}) - \widetilde{h}_i \circ \widetilde{H}_{i-1}(\mathbf{x}) \right\vert_\infty \\
+& \leq Q_i \left\vert H_{i-1} (\mathbf{x})- \widetilde{H}_{i-1}(\mathbf{x}) \right\vert _\infty ^{\beta_i \wedge 1} + \Vert \vert h_i - \widetilde{h}_i \vert _\infty \Vert_{L^\infty [0,1]^{d_i}}
+\end{align*}
+Mit dieser Abschätzung können wir nun unser Lemma beweisen: Sei $h_{ij}$ mit $K_i \geq 1$ und $\widetilde{h}_i$ wie im Lemma definiert, dann gilt
+\begingroup
+\allowdisplaybreaks
+\begin{align*}
+& \Vert h_q \circ ... \circ h_0 - \widetilde{h}_q \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} \\
+& \leq K_q (2K_{q-1})^{\beta_q} \Vert h_{q-1} \circ ... \circ h_0 - \widetilde{h}_{q-1} \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} ^{\beta_{q}\wedge 1} + \Vert \vert h_q - \widetilde{h}_q \vert_\infty \Vert_{L^\infty [0,1]^{d_i}} \\
+& \leq K_q (2K_{q-1})^{\beta_q} \bigg( (2 K_{q-2})^{\beta_{q-1}} \Vert h_{q-2} \circ ... \circ h_0 - \widetilde{h}_{q-2} \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} ^{\beta_{q-1}\wedge 1} \\
+& \quad + \Vert \vert h_{q-1} - \widetilde{h}_{q-1} \vert_\infty \Vert_{L^\infty [0,1]^{d_i}} \bigg)^{\beta_{q}\wedge 1}  + \Vert \vert h_q - \widetilde{h}_q \vert_\infty \Vert_{L^\infty [0,1]^{d_i}} 
+\end{align*}
+Aus $K_i \geq 1$ und $\beta_i \geq 0$ folgt $K_i^{\beta_i \wedge 1} \leq K_i$. Zusammen mit der Ungleichheit $(y+z)^\alpha \leq y^\alpha + z^\alpha$, dass für alle $y,z \geq 0$ und alle $\alpha \in [0,1]$ gilt, können wir nun weiter abschätzen:
+\begin{align*}
+&\leq K_q \bigg( (2K_{q-1})^{\beta_q}  (2 K_{q-2})^{\beta_{q-1}} \Vert h_{q-2} \circ ... \circ h_0 - \widetilde{h}_{q-2} \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} ^{(\beta_{q-1}\wedge 1) \cdot (\beta_{q}\wedge 1)} \\
+& \quad + (2K_{q-1})^{\beta_q} \Vert \vert h_{q-1} - \widetilde{h}_{q-1} \vert_\infty \Vert_{L^\infty [0,1]^{d_i}} ^{\beta_{q}\wedge 1} \bigg)  + \Vert \vert h_q - \widetilde{h}_q \vert_\infty \Vert_{L^\infty [0,1]^{d_i}}\\
+& \qquad \qquad\qquad\qquad\qquad\qquad\qquad\qquad \vdots \\
+& \leq K_q \prod\limits_{l=0}^{q-1} (2K_l)^{\beta _{l+1}} \sum\limits_{i=0}^{q} \Vert \vert h_i - \widetilde{h}_i \vert_\infty \Vert _{L^\infty[0,1]^{d_i}} ^{\prod_{l=i+1}^q \beta _l \wedge 1}, 
+\end{align*}
+wobei wir hier sukzessiv $\Vert h_{q-2} \circ ... \circ h_0 - \widetilde{h}_{q-2} \circ ... \circ \widetilde{h}_0 \Vert _{L^\infty [0,1]^d} ^{(\beta_{q-1}\wedge 1) \cdot (\beta_{q}\wedge 1)}$ weiter abgeschätzt und ausgenutzt haben, dass 
+\begin{align*}
+\forall k \in \{0,...,q\}: \qquad \Vert \vert h_k - \widetilde{h}_k \vert_\infty \Vert _{L^\infty[0,1]^{d_k}} ^{\prod_{l=k+1}^q \beta _l \wedge 1} \leq \sum\limits_{i=0}^{q} \Vert \vert h_i - \widetilde{h}_i \vert_\infty \Vert _{L^\infty[0,1]^{d_i}} ^{\prod_{l=i+1}^q \beta _l \wedge 1}
+\end{align*}
+und
+\begin{align*}
+\Vert \vert h_i - \widetilde{h}_i \vert_\infty \Vert_{L^\infty [0,1]^{d_i}}  \leq K_q \prod\limits_{l=0}^{q-1} (2K_l)^{\beta _{l+1}} \Vert \vert h_i - \widetilde{h}_i \vert_\infty \Vert_{L^\infty [0,1]^{d_i}}.
+\end{align*}
+\endgroup
+\end{proof}
+\subsubsection{Beweis zum Theorem 1}
+\begin{proof}[Beweis zum Theorem 1]
+Es reicht aus das Theorem 1 für hinreichend große $n$ zu beweisen. \\
+Als erstes werden wir unter der Annahme, dass $C \phi _n L \log^2(n) \leq \Delta _n (\widehat{f}_n,f_0)$ gilt, die untere Schranke aus \eqref{eq:19} vom Theorem \ref{thm:1} zeigen. Wir nutzen dafür die Ungleichung vom Orakel-Typus aus dem Theorem \ref{thm:2} mit den angenommenen Schranken der Tiefe $L$ (aus Bedingung $(ii)$) und der Anzahl an aktiven Parametern $s$ (aus Bedingung $(iv)$). Es folgt für den Stichprobenumfang  $n \geq 3$:
+\begin{align} \label{eq:27} 
+\begin{split}
+& \frac{1}{4} \Delta _n (\widehat{f}_n, f_0) - C' \phi_n L \log^2(n) \leq R(\widehat{f}_n , f_0) \\
+& \leq 4 \inf\limits_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - f_0 \right\Vert ^2 _\infty + 4\Delta_n(\widehat{f}_n , f_0) + C'\phi_n L \log^2(n).
+\end{split} 
+\end{align}
+Wir zeigen (\ref{eq:27}), indem wir im Theorem \ref{thm:2} für die untere Grenze $\epsilon= \frac{1}{2}$ und für die obere Grenze $\epsilon = 1$ wählen, dann gilt nämlich 
+\begin{align*}
+& \frac{1}{4} \Delta_n (\widehat{f}_n, f_0) - \tau_{\frac{1}{2}, n} \leq R(\widehat{f}_n , f_0) \leq 4 \inf\limits_{f \in F(L,\mathbf{p}, s, F)} \Vert f - f_0 \Vert ^2 _\infty  + 4 \Delta_n (\widehat{f}_n, f_0) + \tau_{1, n}.
+\end{align*} 
+Um nun beide Seiten von (\ref{eq:27}) zu zeigen, müssen wir nachweisen, dass $\tau_{\epsilon,n} \leq C' \phi_n L \log^2(n)$ gilt. Es gilt für eine Konstante $C'$, die von $(q, \mathbf{d}, \mathbf{t}, \mathbf{\beta}, F)$ abhängt und sich von Zeile zu Zeile ändern kann, dass
+\begin{align*}
+\tau_{\epsilon,n} &= C_\epsilon F^2 \frac{(s+1) \log\left(n(s+1)^L p_0 p_{L+1}\right)}{n} \leq C' \frac{s\log\left(n(s+1)^L p_0 p_{L+1}\right)}{n}\\
+& \ \ \strut\mathclap{\underset{Bed (iv)}\leq} \quad  C' \phi_n \log(n) \log\left(n(s+1)^L p_0 p_{L+1}\right) \\ 
+& = C' \phi_n \log(n) \left( \log\left(n\right) + L \log\left(s+1 \right) + \log \left(p_0 p_{L+1} \right) \right) \\
+& \ \ \strut\mathclap{\underset{Bed (ii)}\leq} \quad C' \phi_n \log(n) \left( L \log\left(s+1 \right) \right) \\
+& \ \ \strut\mathclap{\underset{Bed (iv)}\leq} \quad C' \phi_n \log(n)  L \log\left(n \right) =  C' \phi_n L \log(n)^2.
+\end{align*} Somit haben wir (\ref{eq:27}) gezeigt. \\Falls nun  $C \phi _n L \log^2(n) \leq \Delta _n (\widehat{f}_n,f_0)$ gilt und wir $ C= 8C'$ wählen, dann folgt für 
+\begin{equation*}
+C' \phi_n L \log^2(n) = \frac{1}{8} C \phi_n L \log^2(n) \leq \frac{1}{8}\Delta_n(\widehat{f}, f_0).
+\end{equation*}
+Mit (\ref{eq:27}) gilt insgesamt 
+\begin{align*}
+R(\widehat{f}_n, f_0) \geq \frac{1}{4} \Delta _n (\widetilde{f}_n, f_0) - C' \phi_n L \log^2(n) \geq \frac{1}{4} \Delta _n (\widehat{f}_n, f_0) -\frac{1}{8} \Delta_n(\widehat{f}_n, f_0) = \frac{1}{8}\Delta_n(\widehat{f}_n, f_0).
+\end{align*}
+Damit gilt $\frac{1}{8}\Delta_n(\widehat{f}_n, f_0) \leq R(\widehat{f}_n,f_0)$
+und somit ist die untere Grenze in (\ref{eq:19}) bewiesen. \\ \\
+Um die obere Grenze von (\ref{eq:18}) und (\ref{eq:19}) herzuleiten, werden wir die obere Abschätzung aus (\ref{eq:27}) nutzen. Wir müssen somit eine Schranke für den Approximationsfehler 
+\begin{align*}
+\inf\limits_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - f_0 \right\Vert_\infty
+\end{align*}
+finden. Wir werden dafür die Regressionsfunktion $f_0$, wie in (\ref{eq:26}), in der Form $f_0 = h_q \circ ... \circ h_0 $ mit $h_i =(h_{ij})_j ^\top, \ h_{ij}$ definiert auf $[0,1]^{t_i}$ darstellen und für jedes beliebige $i < q$ soll $h_{ij}$ auf $[0,1]$ abbilden. \\ \\
+Nach Theorem \ref{thm:3} können wir ein Netzwerk geeigneter Größe finden, die die $h_{ij}$ annähern können.
+Wir wenden das Theorem auf jede Funktion $h_{ij}$ einzeln an, wobei, wie oben schon gezeigt, $h_{ij} \in C_{t_i}^{\beta_i}\left([0,1]^{t_i},(2K_{i-1})^{\beta_i}\right)$ gilt. Um die Bedingungen aus Theorem \ref{thm:3} zu erfüllen, wählen wir $m = \lceil \log_2 (n) \rceil \geq 1$ und $N \leq (\beta_i +1)^{t_i} \vee (Q_i+1)e^{t_i}$, wobei $Q_i$ eine obere Schranke für die Hölder Konstante von $h_{ij}$ ist. Nach dem Theorem \ref{thm:3} gilt nun, dass ein Netzwerk existiert mit $\widetilde{h}_{ij} \in F(L_i ', (t_i, 6(t_i + \lceil \beta _i \rceil) N,..., 6(t_i + \lceil \beta_i \rceil)N,1), s_i)$ mit der Tiefe $L_i ' := 8 + (\lceil \log_2 n \rceil + 5 ) (1+\lceil \log_2 (t_i \vee \beta _i) \rceil ) $ und der aktiven Parameter $s_i \leq 141 (t_i + \beta_i +1) ^{3+t_i} N (\lceil \log_2 n \rceil + 6)$, sodass 
+\begin{equation} \label{eq:28}
+\Vert \widetilde{h}_{ij} - h_{ij} \Vert _{L^\infty ([0,1]^{t_i} )} \leq (2Q_i +1 )(1+t_i^2+ \beta_i^2) 6^{t_i} N n^{-1} + Q_i 3^{\beta_i} N ^{- \frac{\beta_i}{t_i}}.
+\end{equation}
+Um aber $\inf_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - h_q \circ ... \circ h_0 \right\Vert_\infty$ mit einer Komposition von $f^*$ aus $\widetilde{h}_i$ und dem Lemma \ref{lemma:1} abzuschätzen, muss $\widetilde{h}_{ij}: [0,1]^{t_i} \rightarrow [0,1]$ gelten. Wir müssen also zunächst die Netzwerke $\widetilde{h}_{ij}$ transformieren.\\
+Falls nun $i < q$, dann füge zu dem Output $x$ zwei zusätzliche Layer hinzu um den Output zu $1-(1-x)_+$ zu transformieren.
+Man braucht insgesamt 4 zusätzliche aktive Parameter. Wir nennen das resultierende Netzwerk $h_{ij}^* \in F(L_i' + 2, (t_i, 6(t_i + \lceil \beta _i \rceil) N,..., 6(t_i + \lceil \beta_i \rceil)N,1), s_i+4)$ und beobachten, dass $\sigma (h^*_{ij}) = (h^*_{ij} (\mathbf{x}) \vee 0 ) \wedge 1.$ Die Transformation kann man graphisch in Abbildung \ref{transformation} nachvollziehen.
+\begin{figure}[h] % Do not use only [h] in real documents.
+\begin{minipage}[t]{.35\linewidth}
+\includegraphics[width=\linewidth]{Bilder/beweis_1.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{.6\linewidth}
+\includegraphics[width=\linewidth]{Bilder/beweis_2.png}
+\end{minipage}
+\caption[Caption for LOF]{Rote Linien illustrieren inaktive Verbindungen. Man erkennt leicht, dass wir jeweils zwei zusätzliche Gewichts- und Verschiebungsparameter haben.}
+\label{transformation}
+\end{figure} 
+\\Da wir durch die Transformation $(1-(1-x)_+)_+$ von $\widetilde{h}_{ij}$ zu $\sigma (h^*_{ij})$ das Supremum nicht erhöht haben und $h_{ij}(\mathbf{x}) \in [0,1]$ gilt, muss gelten, dass 
+\begin{equation} \label{eq:29}
+\Vert \sigma (h^*_{ij}) - h_{ij} \Vert _{L^\infty ([0,1]^r)} \leq \Vert \widetilde{h}_{ij} - h_{ij} \Vert _{L^\infty([0,1]^r)}.
+\end{equation}
+Falls die Netzwerke $h_{ij}^*$ parallel berechnet werden, vgl. Abschnitt \ref{Einbettung}, dann liegt $h_i^*=(h_{ij}^*)_{j=1,...,d_{i+1}}$ in der Klasse
+\begin{equation} \label{zusatz:1}
+F\left(L_i' + 2, (d_i, 6r_iN,..., 6r_iN, d_{i+1}), d_{i+1} (s_i+4) \right),
+\end{equation}
+mit $r_i := \max_i d_{i+1} \left( t_i + \lceil \beta_i \rceil \right)$. Die Netzwerkklasse (\ref{zusatz:1}) ensteht dadurch, dass wir den Input durch $ t_i \leq d_i$, die hidden Layer durch $\sum_{j = 1} ^{d_i+1}6(t_i+\lceil \beta_i \rceil) N = d_{i+1}6(t_i+\lceil \beta_i \rceil)N \leq 6 \cdot \max_i d_{i+1} \left( t_i + \lceil \beta_i \rceil \right)N$ und den Output durch $ \sum_{j=1}^{d_{i+1}} (s_i + 4) = d_{i+1} (s_i+4)$ darstellen können. \\ \\
+Wir können nun das zusammengesetzte Netzwerk $f^* = \widetilde{h}_{q1} \circ \sigma (h^*_{q-1} ) \circ ... \circ \sigma(h^*_0)$ konstruieren, indem wir die Kompositionsregel von Netzwerken, vgl. Abschnitt \ref{Einbettung}, anwenden und erhalten für die Anzahl der Layer
+\begin{equation*}
+\sum_{i=0}^{q-1}(L_i'+2) + \sum_{i=0}^{q-2} 1 + L_q' + 1 = 3q + \sum_{i=0}^q L_i' =: E
+\end{equation*}
+und für die aktiven Parameter
+\begin{equation*}
+\sum_{i=0}^{q-1} d_{i+1} (s_i +4) + s_q \leq \sum_{i=0}^{q} d_{i+1} (s_i +4).
+\end{equation*}
+Wir können das Netzwerk zusammenfassen zu
+\begin{equation} \label{eq:30}
+F\left(E, (d, 6r_iN,..., 6r_iN,1), \sum\limits_{i=0}^q d_{i+1} (s_i+4) \right), 
+\end{equation}
+mit $E:=3q + \sum_{i=0}^q L_i'$.\\
+Als nächstes wollen wir das Netzwerk so transformieren, sodass die Bedingungen aus dem Theorem für $L,\mathbf{p},s$ erfüllt werden. Es existiert nun ein $A_n$, dass beschränkt ist in $n$, sodass $E = A_n + \lceil \log_2n \rceil(\sum_{i=0}^q \lceil \log_2(t_i \vee \beta_i)\rceil + 1)$, da 
+\begin{align*}
+&\sum\limits_{i=0}^q L_i' = \sum\limits_{i=0}^q \bigg(8 + (\lceil \log_2 n \rceil + 5 )\cdot (1+\lceil \log_2 (t_i \vee \beta _i )\rceil ) \bigg) \\ 
+& = \sum\limits_{i=0}^q \bigg(8 +( \lceil \log_2 n \rceil + 5  + \lceil \log_2 (t_i \vee \beta _i )\rceil  \cdot \lceil \log_2 n \rceil + 5\lceil \log_2 (t_i \vee \beta _i )\rceil \bigg)\\
+&= (q+1)8 + \sum\limits_{i=0}^q \bigg( \lceil \log_2 n \rceil + 5  + \lceil \log_2 (t_i \vee \beta _i )\rceil  \cdot \lceil \log_2 n \rceil + 5\lceil \log_2 (t_i \vee \beta _i )\rceil \bigg) \\
+& = (q+1)8 + \sum\limits_{i=0}^q \bigg(5 + 5\lceil \log_2 (t_i \vee \beta _i )\rceil \bigg) + \sum\limits_{i=0}^q  \bigg(\lceil \log_2 n \rceil \left( \lceil \log_2 (t_i \vee \beta _i \rceil + 1 \right) \bigg) \\
+& = (q+1)8 + \sum\limits_{i=0}^q \bigg(5 + 5\lceil \log_2 (t_i \vee \beta _i \rceil \bigg) + \lceil \log_2 n \rceil  \sum\limits_{i=0}^q \bigg( \lceil \log_2 (t_i \vee \beta _i \rceil + 1 \bigg) 
+\end{align*}
+Insgesamt gilt also
+\begin{align*}
+E&=3q + \sum_{i=0}^q L_i' \\ 
+&= 3q + (q+1)8 + \sum\limits_{i=0}^q \left(5 + 5\lceil \log_2 (t_i \vee \beta _i \rceil \right) + \lceil \log_2 n \rceil  \sum\limits_{i=0}^q \left( \lceil \log_2 (t_i \vee \beta _i \rceil + 1 \right) \\
+& = A_n + \lceil \log_2n \rceil(\sum_{i=0}^q \lceil \log_2(t_i \vee \beta_i)\rceil + 1), 
+\end{align*}
+wobei $A_n := 3q + (q+1)8 + \sum\limits_{i=0}^q \left(5 + 5\lceil \log_2 (t_i \vee \beta _i \rceil \right)$.\\
+Aus der Tatsache, dass $\lceil x \rceil < x + 1$ gilt und $A_n$ beschränkt in $n$ ist, gilt für ausreichend große $n$, dass
+\begin{align*}
+E & \leq  \log_2(n)\left(\sum_{i=0}^q  \log_2(t_i \vee \beta_i) +1 + 1 \right) \\
+&= \log_2(n)\left(\sum_{i=0}^q  \log_2(t_i \vee \beta_i) + \log_2(4) \right) \underset{Bed (ii)}\leq L
+\end{align*}
+Da nun $E \leq L$ für ausreichend große $n$ gilt, kann durch Hinzufügen von Layers, vgl. Abschnitt \ref{Einbettung}, die Netzwerkklasse aus (\ref{eq:30}) zu $F(L,\mathbf{p}, s)$ für ausreichend große $n$ erweitert werden. Wir erweitern die Netzwerkklasse unter Beachtung, dass wir die Bedingungen des Theorems durch $L,\mathbf{p}, s$ erfüllen und wählen dafür $N=\lceil c \max_{i = 0,...,q} n ^{\frac{t_i}{2\beta^*_i + t_i}} \rceil$ für ein ausreichend kleine Konstante $c > 0$, die nur von $q,\mathbf{d}, \mathbf{t}, \boldsymbol{\beta}$ abhängt. Wir können nun mit dem Lemma \ref{lemma:1} und einer Konstanten $C'$, die von $(q, \mathbf{d}, \mathbf{t}, \boldsymbol{\beta}, F)$ abhängt und sich von Zeile zu Zeile ändern kann, folgern, dass
+\begin{align*} 
+& \inf\limits_{f^* \in F(L,\mathbf{p}, s)} \left\Vert f^* - f_0 \right\Vert_\infty^2 \\
+& = \inf\limits_{\widetilde{h}_{q1} \circ \sigma (h^*_{q-1} ) \circ ... \circ \sigma(h^*_0)\in F(L,\mathbf{p}, s)}\left\Vert \widetilde{h}_{q1} \circ \sigma (h^*_{q-1} ) \circ ... \circ \sigma(h^*_0) - h_q \circ ... \circ h_0 \right\Vert_\infty^2 \\ 
+& \leq \inf_{\cdots} \left( K_q \prod\limits_{l=0}^{q-1} (2K_l)^{\beta _{l+1}} \right)^2 \left( \sum\limits_{i=0}^{q-1} \Vert \vert \sigma(h_i^*) - h_i \vert_\infty \Vert _{L^\infty[0,1]^{d_i}} ^{\prod_{l=i+1}^q \beta _l \wedge 1} + \Vert \vert \widetilde{h}_{q1} - h_q \vert_\infty \Vert _{L^\infty[0,1]^{d_q}} ^1  \right)^2\\
+& \leq \inf_{\cdots} C' \left( \sum_{i=0}^{q-1} \left( \sum_{j=1}^{d_{i+1}} \Vert \vert \sigma(h_{ij}^*) - h_{ij} \vert_\infty \Vert _{L^\infty[0,1]^{t_i}} \right) ^{\prod_{l=i+1}^q \beta _l \wedge 1} + \Vert \vert \widetilde{h}_{q1} - h_q \vert_\infty \Vert _{L^\infty[0,1]} \right)^2 
+\end{align*}
+gilt. Mit der Gleichung (\ref{eq:29}) folgt weiter
+\begin{align*} 
+& \leq \inf_{\cdots} C' \left( \sum_{i=0}^{q-1} \left( \sum_{j=1}^{d_{i+1}} \Vert \vert h_{ij}^* - h_{ij} \vert_\infty \Vert _{L^\infty[0,1]^{t_i}} \right)^{\prod_{l=i+1}^q \beta _l \wedge 1} + \Vert \vert \widetilde{h}_{q1} - h_q \vert_\infty \Vert _{L^\infty[0,1]} \right)^2. 
+\end{align*}
+Mit der Gleichung (\ref{eq:28}) können wir anschließend folgern
+\begin{align*} 
+& \leq C' \bigg( \sum_{i=0}^{q-1} \left( d_{i+1} \left( 2((2K_{i-1})^{\beta_i} +1 )(1+t_i^2+ \beta_i^2) 6^{t_i} N n^{-1} + (2K_{i-1})^{\beta_i} 3^{\beta_i} N ^{- \frac{\beta_i}{t_i}} \right) \right)^{\prod_{l=i+1}^q \beta _l \wedge 1} \notag \\
+&\quad + 2(K_q (2K_{q-1})^{\beta_q} + 1) (1+t_q^2+ \beta_q^2) 6^{t_q} N n^{-1} + K_q (2K_{q-1})^{\beta_q}3^{\beta_q} N ^{- \frac{\beta_q}{t_q}} \bigg)^2 \notag 
+\end{align*}
+und für ausreichend kleines $c > 0$ in $N$ gilt
+\begin{align*}
+& \leq C' \bigg( \sum_{i=0}^{q-1} \left( d_{i+1} \left( 2((2K_{i-1})^{\beta_i} +1 )(1+t_i^2+ \beta_i^2) 6^{t_i} N n^{-1} + (2K_{i-1})^{\beta_i} 3^{\beta_i} N ^{- \frac{\beta_i}{t_i}} \right) \right) \notag \\
+&\quad + 2(K_q (2K_{q-1})^{\beta_q} + 1) (1+t_q^2+ \beta_q^2) 6^{t_q} N n^{-1} + K_q (2K_{q-1})^{\beta_q}3^{\beta_q} N ^{- \frac{\beta_q}{t_q}} \bigg)^2 \notag
+\end{align*}
+und damit ergibt sich insgesamt
+\begin{align} \label{eq:31}
+\inf\limits_{f^* \in F(L,\mathbf{p}, s)} \left\Vert f^* - f_0 \right\Vert_\infty^2 \leq C' \max\limits_{i=0,...,q} N^{- \frac{2 \beta_i}{t_i}} \leq C' \max\limits_{i=0,...,q} c^{- \frac{2\beta_i^*}{t_i}} n^{- \frac{2\beta^*_i}{2\beta^*_i + t_i}}.
+\end{align}
+Für den Approximationsfehler in (\ref{eq:27}) brauchen wir jedoch eine Netzwerkfunktion, die in der Supremumsnorm von $F$ beschränkt ist um den Term $\inf\limits_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - f_0 \right\Vert ^2 _\infty$
+abzuschätzen. \\ Aus (\ref{eq:31}) können wir entnehmen, dass es eine Folge $(\widetilde{f}_n)_n$ existiert, sodass für alle hinreichend große $n$, $\widetilde{f}_n \in F(L,\mathbf{p}, s)$ mit
+\begin{equation} \label{absch2}
+\Vert \widetilde{f}_n - f_0 \Vert_\infty^2 \leq 2C\max_{i=0,...,q} c^{- \frac{2\beta^*_i}{t_i}} n ^{-\frac{2\beta_i^*}{2\beta_i^* + t_i}}
+\end{equation} gilt. Definiere $f^* _n = \widetilde{f}_n \cdot (\left\Vert f_0 \right\Vert _\infty / \Vert \widetilde{f}_n \Vert_\infty \wedge 1).$ Das Netzwerk $f_n^*$ liegt somit auch in $F(L,\mathbf{p}, s)$. Es gilt weiter, dass
+\begin{align*}
+\Vert f_n ^* \Vert_\infty = \Vert \widetilde{f}_n \cdot \left( \frac{\Vert f_0 \Vert _\infty} {\Vert \widetilde{f}_n \Vert_\infty} \wedge 1 \right) \Vert_\infty \leq \Vert \widetilde{f}_n \cdot \frac{ \Vert f_0 \Vert_\infty}{\Vert\widetilde{f}_n\Vert_\infty} \Vert_\infty \leq \Vert \widetilde{f}_n \Vert_\infty \cdot \frac{ \Vert f_0 \Vert_\infty}{\Vert\widetilde{f}_n\Vert_\infty} = \Vert f_0 \Vert_\infty
+\end{align*}
+und damit
+\begin{equation*}
+\Vert f_n ^* \Vert_\infty \leq \Vert f_0 \Vert_\infty = \Vert g_q \circ ... \circ g_0 \Vert_\infty = \Vert g_q \Vert_\infty \leq K \leq F,
+\end{equation*}
+wobei die letzte Ungleichung aus der Annahme (i) stammt. Wir haben somit gezeigt, dass $f^*_n \in F(L.\mathbf{p}, s, F)$ gilt. Aus $f^*_n - f_0 = (f^*_n - \widetilde{f}_n ) + (\widetilde{f}_n - f_0)$ und
+\begin{align*}
+\Vert f^*_n - \widetilde{f}_n\Vert_\infty  &=  \Vert \widetilde{f}_n \cdot \left( \frac{\Vert f_0 \Vert _\infty} {\Vert \widetilde{f}_n \Vert_\infty } \wedge 1 \right) - \widetilde{f}_n \Vert_\infty = \Vert \left( \widetilde{f}_n \cdot \frac{\Vert f_0 \Vert _\infty} {\Vert  \widetilde{f}_n \Vert_\infty }  - \widetilde{f}_n \right) \wedge \left(\widetilde{f}_n - \widetilde{f}_n\right) \Vert_\infty \\
+& \leq \Vert \widetilde{f}_n \cdot  \frac{\Vert f_0 \Vert _\infty} {\Vert  \widetilde{f}_n \Vert_\infty } - \widetilde{f}_n \Vert_\infty = \Vert \widetilde{f}_n \left(1- \frac{\Vert f_0 \Vert _\infty} {\Vert  \widetilde{f}_n \Vert_\infty} \right) \Vert_\infty = \Vert \widetilde{f}_n \left( \frac{ \Vert \widetilde{f}_n \Vert _\infty - \Vert f_0 \Vert _\infty} {\Vert  \widetilde{f}_n \Vert_\infty} \right) \Vert_\infty \\
+& \leq \Vert \widetilde{f}_n \Vert _\infty \cdot \Vert \frac{ \Vert \widetilde{f}_n \Vert _\infty - \Vert f_0 \Vert _\infty} {\Vert  \widetilde{f}_n \Vert_\infty} \Vert_\infty =  \Vert \Vert \widetilde{f}_n \Vert _\infty - \Vert f_0 \Vert _\infty \Vert _\infty \\
+& \leq \Vert \widetilde{f}_n -  f_0 \Vert _\infty 
+\end{align*}
+erhalten wir 
+\begin{align} \label{absch}
+\Vert f^*_n- f_0\Vert _\infty &= \Vert (f^*_n - \widetilde{f}_n ) + (\widetilde{f}_n - f_0) \Vert _\infty \notag \\
+& \leq  \Vert f^*_n - \widetilde{f}_n \Vert_\infty + \Vert \widetilde{f}_n - f_0\Vert_\infty  \notag \\ 
+&\leq 2 \Vert \widetilde{f}_n- f_0\Vert_\infty.
+\end{align} 
+Das zeigt, dass (\ref{eq:31}) auch gilt (mit Konstanten multipliziert mit 8), falls das Infimum über die beschränktere Netzwerkklasse $F(L, \mathbf{p},s ,F)$ genommen wird:
+\begin{align*}
+\inf\limits_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - f_0 \right\Vert ^2 _\infty & \underset{\eqref{absch}}{\leq} \inf\limits_{\widetilde{f} \in F(L,\mathbf{p},s)} 4 \Vert \widetilde{f} - f_0\Vert_\infty^2 \\
+& \underset{\eqref{absch2}}{\leq} 8 C \max_{i=0,...,q} c^{- \frac{2\beta^*_i}{t_i}} n ^{-\frac{2\beta_i^*}{2\beta_i^* + t_i}}.
+\end{align*}
+Zusammen mit (\ref{eq:27}) folgt
+\begin{align*}
+R(\widehat{f}_n , f_0) & \leq 4 \inf\limits_{f^* \in F(L,\mathbf{p},s, F)} \left\Vert f^* - f_0 \right\Vert ^2 _\infty + 4\Delta_n(\widehat{f}_n , f_0) + C'\phi_n L \log^2(n)\\
+& \leq 32 C \max\limits_{i=0,...,q} c^{- \frac{2\beta_i^*}{t_i}} n^{- \frac{2\beta^*_i}{2\beta^*_i + t_i}} + 4 \Delta_n(\widehat{f}_n , f_0) + C' \phi_n L \log^2(n).
+\end{align*}
+\\
+Für jede beliebige Konstante $\widetilde{C}$ folgt mit der Bedingung $\Delta _n (\widehat{f}_n,f_0) \leq \widetilde{C} \phi _n L \log^2(n)$ offensichtlich die obere Schranke von (\ref{eq:18}) und mit der Bedingung $\Delta _n (\widehat{f}_n,f_0) \geq \widetilde{C} \phi _n L \log^2(n)$ die obere Schranke von (\ref{eq:19}).
+\end{proof}
+\section{Beispiele}
+In diesem Abschnitt werden wir uns Modelle anschauen, die eine stärke strukturelle Zerlegung der Regressionsfunktion $f_0$ formulieren als wir es im Abschnitt \ref{Hauptresultat} getan haben. Es sind somit Spezialfälle.
+\subsection{Additive Modelle} \label{additive}
+Bei additiven Modellen wird angenommen, dass die Regressionsfunktion $f_0(\mathbf{x})$ in eine Summe zerfällt, deren Summanden nur noch von einer Komponente von $\mathbf{x}$ abhängen. 
+\begin{def2} \cite[S. 217]{richter}
+\\ Es sei $K > 0$. Es sei $f_0(\mathbf{x}) = \sum_{j=1}^d g_{0j} (x_j)$ mit stetig differenzierbaren Funktionen $g_{0j}: \mathbb{R} \rightarrow [-K,K].$ Dann gilt 
+\begin{align*}
+f_0 = g_1 \circ g_0,
+\end{align*}
+wobei 
+\begin{align*}
+& g_0: [0,1]^d \rightarrow \mathbb{R}^d, \quad g_0(\mathbf{x}) = g(g_{01}(x_1),..., g_{0d}(x_d))^\top \\
+& g_1: \mathbb{R}^d \rightarrow \mathbb{R}, \qquad g_1(\mathbf{y}) = \sum\limits_{j=1}^d y_j
+\end{align*}
+Die einzelnen Komponenten von $g_0$ sind zwar nur einmal differenzierbar, aber haben auch nur den Definitionsbereich $\mathbb{R}$. Dahingegen besitzt $g_1$ zwar den Definitionsbereich $\mathbb{R}^d$, ist aber als Summenfunktion unendlich oft differenzierbar.
+\end{def2}
+Da die Funktionen $g_{0j}$, $j=1,...,d$ stetig differenzierbar sind mit dem Wertebereich $[-K,K]$, gilt für $g_0: [0,1]^d \rightarrow [-K,K]^d$. Damit können wir für $g_1: [-K,K]^d \rightarrow [-Kd, Kd]$ wählen. Die Dimensionen des Modells sind somit $d_0 = d$, $d_1=d$, $d_2 = 1$. Die einzelnen Komponenten von $g_0$ sind stetig differenzierbar und hängen nur jeweils von einer Komponente ab, daher gilt für die effektive Dimension $t_0= 1$ und für die Glattheit $\beta_0 = 1$. Die Funktion $g_1$ ist unendlich oft differenzierbar und besteht aus einer Summe von $d$ Terme. Es gilt somit für die effektive Dimension $t_1 = d$ und $\beta_1 > 1$ beliebig groß. Zusammenfassend können wir sagen, dass die Regressionsfunktion in der Klasse $G(1,(d,d,1), (1,d), (1,\beta_1), (K+1)d)$ liegt.\\
+Der effektive Glattheitsindex liegt bei $\beta^*_0 = 1 \cdot (\beta_1 \wedge 1) = 1$ und $\beta^*_1 > 1$ kann beliebig groß gewählt werden. Als nächstes werden wir die Konvergenzrate 
+\begin{equation*}
+\phi_n = \max\limits_{i=0,1} n ^{-{\frac{2\beta_i^*}{2\beta_i^* + t_i}}}
+\end{equation*}
+berechnen. Es gilt mit den effektiven Glattheitsindizes 
+\begin{equation*}
+\min\limits_{i=0,1} \frac{2\beta_i^*}{2\beta_i^* + t_i} = \min \left\{ \frac{2}{3}, \frac{2\beta^*_1}{2\beta^*_1 + d} \right\} = \frac{2}{3}
+\end{equation*}
+und damit folgt für die Konvergenzrate $\phi_n = n^{-2/3}$. Werden nun die Bedingungen
+\begin{itemize}
+\item[\textit{(i)}]{$F \geq (K+1)d$}
+\item[\textit{(ii)}]{\textit{$L$ proportional zu $\log_2(n)$:} $\log_2(n)\left( \log_2(4)+\log_2(4d \vee 4 \beta_1) \right) \leq L \lesssim \log_2(n)$}
+\item[\textit{(iii)}]{$n^{1/3} \lesssim \min_i p_i$}
+\item[\textit{(iv)}]{$s \asymp n^{1/3}\log(n)$}
+\end{itemize}
+ durch ein Netzwerkarchitektur $F(L,\mathbf{p},s,F)$ erfüllt, dann können wir die 2 verschiedenen Fälle im Theorem \ref{thm:1} für das Netzwerk zu
+\begin{equation*}
+R(\widehat{f}_n, f_0) \lesssim n^{-2/3} \log(n)^3 + \Delta_n(\widehat{f}_n,f_0)
+\end{equation*}
+zusammenfassen.
+\subsection{Verallgemeinerte additive Modelle}
+Wir nehmen an, dass die Regressionsfunktion in der Form
+\begin{equation*}
+f_0(x_1,...,x_d) = h(\sum\limits_{j=1}^d g_{0j}(x_j))
+\end{equation*}
+geschrieben werden kann, wobei $h: \mathbb{R} \rightarrow \mathbb{R}$ eine unbekannte Funktion ist. Wir können die Regressionsfunktion als Komposition $f_0 = g_2 \circ g_1 \circ g_0$ mit $g_0$, $g_1$, wie im Abschnitt \ref{additive} definiert, und $g_2 = h$ schreiben. Wir werden diesmal annehmen, dass wir eine allgemeinere Form für die $g_{0j} \in C_1^\beta([0,1],K), \ j = 1,...,d$ haben. Sei nun $h \in C_1^\gamma(\mathbb{R},K)$, dann gilt $f_0: [0,1]^d \overset{g_0}{\rightarrow}[-K,K]^d \overset{g_1}{\rightarrow} [-Kd, Kd] \overset{g_2}{\rightarrow} [-K,K]$. Für jedes beliebige $\beta_1 > 1$ gilt $g_1 \in C_d^{\beta_1}([-K,K]^d, (K+1)d)$. Wie bei den additiven Modellen begründet, gilt
+\begin{equation*}
+f_0 \in G\left(2,(d,d,1,1), (1,d,1), (\beta, (\beta \vee 2)d, \gamma), (K+1)d \right).
+\end{equation*}
+Für die effektiven Glattheitsindizes gilt:
+\begin{align*}
+& \beta_0 ^* = \beta \left( \underbrace{((\beta \vee 2)d)}_{\geq 2}\wedge 1 \right)(\gamma \wedge 1) = \beta (\gamma \wedge 1)\\
+& \beta_1 ^* = (\beta \vee 2)d (\gamma \wedge 1) \\
+& \beta_2^* = \gamma
+\end{align*}
+Wir können nun für die Konvergenzrate folgern, dass
+\begin{align*}
+&\min \left\{ \frac{2 \beta (\gamma \wedge 1)}{2 \beta (\gamma \wedge 1) +1 }, \frac{2(\beta \wedge 2)d(\gamma \wedge 1)}{2(\beta \wedge 2)d(\gamma \wedge 1) + d}, \frac{2\gamma}{2\gamma + 1} \right\} \\
+& = \min \left\{ \frac{2 \beta (\gamma \wedge 1)}{2 \beta (\gamma \wedge 1) +1 },  \frac{2(\beta \wedge 2)(\gamma \wedge 1)}{2(\beta \wedge 2)(\gamma \wedge 1) + 1}, \frac{2\gamma}{2\gamma + 1} \right\} \\
+& = \min \left\{ \frac{2 \beta (\gamma \wedge 1)}{2 \beta (\gamma \wedge 1) +1 }, \frac{2\gamma}{2\gamma + 1} \right\}
+\end{align*}
+und damit 
+\begin{align*}
+\phi_n = \max_{i=0,1,2} n^{- \frac{2\beta_i^*}{2\beta_i^* +t_i}} \leq n^{-\frac{2 \beta (\gamma \wedge 1)}{2 \beta (\gamma \wedge 1) +1}} + n^{-\frac{2\gamma}{2\gamma + 1}}.
+\end{align*}
+Für Netzwerkarchitekturen, die die Bedingungen aus Theorem \ref{thm:1} erfüllen, gilt 
+\begin{equation*}
+R(\widehat{f}_n, f_0) \lesssim \left(n^{-\frac{2 \beta (\gamma \wedge 1)}{2 \beta (\gamma \wedge 1) +1}} + n^{-\frac{2\gamma}{2\gamma + 1}} \right) \log^3(n) + \Delta (\widehat{f}_n, f_0).
+\end{equation*}
+\section{Ausblick}
+In diesem Abschnitt wollen wir diskutieren, welchen Wert die Arbeit an sich und die Ergebnisse, die hier präsentiert wurden, im Kontext der statistischen Ausarbeitung von Methoden des Deep Learnings darstellt. Zum Schluss werden wir uns mit möglichen Verbesserungen und Erweiterungen des Modells auseinandersetzen, um die Lücke zwischen der Theorie und der praktischen Implementation weiter schließen zu können.\\ \\
+In der Arbeit haben wir eine ausführliche Ausarbeitung und Erklärung des wissenschaftlichen Artikels \glqq Nonparametric regression using deep neural networks with ReLU activation function\grqq \ von Johannes Schmidt-Hieber mit vielen Ergänzungen aus verschiedenen Quellen vorgenommen. Zudem haben wir grundlegende Begriffe definiert und erklärt, die essentiell sind für das Verständnis des Artikels. Diese Arbeit dient gewissermaßen als ein erleichterter Einstieg in die statistische Modellierung neuronaler Netzwerke und deren Approximation. \\
+Unter einer hierarchischen Struktur der Regressionsfunktion kann sich das tiefe neuronale Netzwerke der zugrunde liegenden Struktur im Signal anpassen und kann dadurch den Fluch der Dimensionalität umgehen. Die Resultate zeigen zum ersten Mal, dass man eine (fast) optimale Konvergenzrate mit dünnbesetzten multilayer neuronalen Netzwerken mit ReLU Aktivierungsfunktion erreicht. Für den Beweis benutzt man dabei neue Approximationen für multilayer feedforward neuronale Netzwerke mit beschränkten Gewichten und beschränkter Breite der Layer. Es gab zwar schon frühere statistische Arbeiten, jedoch wird nun ein viel allgemeineres und der Praxis entsprechendes Setting angenommen als es in früheren Arbeiten vorgenommen wurde. Wichtige Folgerungen, unter den selben Rahmenbedingungen wie im Haupttheorem 1, sind einmal, dass die hidden Layers mit den Stichprobenumfang mit $L \asymp \log_2(n)$ wachsen sollte und dass das Netzwerk mehr Parameter haben kann als die Anzahl an Stichproben. Eine weitere wichtige Erkenntnis ist, dass für die statistische Performance nicht die Größe des Netzwerkes die wichtigste Rolle spielt, sondern die Regulation des Netzwerkes, d.h. die Anzahl an aktiven Parameter. Die Ergebnisse geben uns auch einen Erklärungsansatz, warum solche Netzwerke in der Praxis gut funktionieren. \\ \\
+Trotz den allgemeinen Annahmen haben wir in dem Modell, wie jede Modellierung, Einschränkungen vorgenommen, die für verschiedene Fragestellungen potenziell ungeeignet sind. Es könnte beispielsweise ein Klassifizierungs- anstatt Regressionsproblem vorliegen. Eine Erweiterung des Modells auf Klassifizierungsprobleme könnte man somit in Betracht ziehen. Es wäre dabei interessant zu untersuchen, wie sich die Resultate ändern, falls im letzten Layer eine Softmax-Aktivierungsfunktion  angewandt wird. \\ Eine weitere wesentliche Einschränkung ist, dass wir ein tiefes \textit{feedforward} neuronales Netzwerk betrachten. Viele der neusten Deep Learning Anwendungen basieren aber auf anderen spezifische Netzwerke, wie zum Beispiel ein faltendes neuronales Netzwerk oder rekurrentes neuronales Netzwerk. Es ist also natürlich sich die Frage zu stellen, wie man solche Arten von Netzwerken statistisch untersucht und dort ebenfalls die Konvergenzrate analysiert.\\
+Eine offensichtliche Verbesserung an dem Modell wäre die Ungenauigkeit, die wir schon im Abschnitt \ref{Hauptresultat} erwähnt haben, in unserer unteren bzw. oberen Schranke zu verbessern. Heuristische Resultate zeigen, dass wahrscheinlich der Faktor $L \log(n)^2$ in der oberen Schranke ein Artefakt des Beweises ist. \\ \\ 
+Die Theorie hinter tiefen Netzwerken hat viele verschiedene Bereiche, die eng miteinander zusammenhängen. Die Entwicklung dieser Bereiche könnte auch Auswirkungen auf die in dieser Arbeit betrachteten Fragestellungen, weshalb wir die möglichen Einflüsse von den verschiedenen Themenbereichen diskutieren wollen. \\ 
+Die Approximationstheorie von Netzwerken hat zwar schon viele Resultate, die bis zu den frühen 1990er zurückreichen, sind dennoch immer noch aktueller Forschungsgegenstand. Im Beweis hat man dabei auch Gebrauch gemacht von neuen Approximationstheorien. Es wäre also möglich, dass wir auf Grundlage von zukünftigen Resultaten in der Approximationstheorie die Ungenauigkeit in unseren Schranken verbessern könnten. \\
+Ein weiterer Themenbereich, der für die Resultate dieser Arbeit interessant sein könnte, ist die Forschung des \textit{stochastic gradient descent}. Hierbei beschäftigt man sich heutzutage mit beispielsweise dem Entkommen von Sattelpunkten oder lokale Minima. Es könnten also Aussagen getroffen werden, wie stark der Term $\Delta_n(\widehat{f}_n, f_0)$ in $n$ sinkt unter Anwendung des \textit{stochastic gradient descent} oder sogar anderen Methoden. \\
+Die Analyse würde aber stark von der angewandten Methode abhängen. Eine unabhängige Analyse könnte durch die Analyse des \textit{loss landscape} tiefer Netzwerke erfolgen, d.h. wie Sattelpunkte, lokale und globale Minima der Verlustfunktion angeordnet sind und wie wir sie charakterisieren können. Wir könnten gegebenenfalls eine obere Schranke für den Term $\Delta_n(\widehat{f}_n,f_0)$ bekommen und diese im Theorem \ref{thm:1} berücksichtigen. Tatsächlich gibt es erste heuritische Ergebnisse für \textit{fully connected} Netzwerke, die eine Verbindung zu \textit{spherical spin glasses} sehen, vgl. \cite{choromanska}, welche schon ausführlich untersucht wurden. Dort liegen alle lokale Minima mit einer hohen Wahrscheinlichkeit in einem Band, das offensichtlich nach unten beschränkt ist durch das globale Minima. Die Breite des Bandes hängt von der Breite des Netzwerkes ab und gibt uns auch eine obere Schranke des Terms $\Delta_n ( \widehat{f}_n, f_0)$ für alle Methoden an, die zu einen lokalen Minima konvergieren. Falls wir dieses heuristische Ergebnis mathematisch festigen können, dann könnten wir die Abhängigkeit des Terms $\Delta_n ( \widehat{f}_n, f_0)$ vom \textit{width vector} $\textbf{p}$ in unserer Konvergenzrate berücksichtigen.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=4cm,height=4cm,keepaspectratio]{Bilder/loss.png}
+	\caption[Caption for LOF]{Beispielhaftes \textit{loss landscape} eines neuronalen Netzwerkes.\footnotemark[10] }
+\end{figure}
+\\ \footnotetext[10]{\cite[Folie 10]{hieber2}}Wir sehen, dass viele Fragen, die aus den verschiedenen Bereichen des Deep Learning auftauchen, noch keine zufriedenstellende Antwort haben. Diese Arbeit soll gewissermaßen ein Start sein, um statistische Modelle aufzubauen, mit der man verwandte Probleme lösen kann, wie beispielsweise die Untersuchung der Konvergenzrate unter anderen Netzwerktypen. 
+
+\newpage
+\begin{thebibliography}{20}
+\bibliographystyle{siam}
+
+\bibitem{ardakani}
+Ardakani, A., Condo, C. und Gross, W. J.:
+\textit{Sparsely-Connected Neural Networks: Towards Efficient VLSI Implementation of Deep Neural Networks}. 
+arXiv:1611.01427, 30. März 2017.
+
+\bibitem{choromanska}
+Choromanska, A., Henaff, M., Mathieu, M., Arous, G. B. und LeCun Y.:
+\textit{The Loss Surfaces of Multilayer Networks}. 
+arXiv:1412.0233 , Januar 2015.
+
+\bibitem{eldan}
+Eldan, R. und Shamir, O.:
+\textit{The Power of Depth for Feedforward Neural Networks}
+arXiv:1512.03965, Mai 2016.
+
+\bibitem{Enyinna}
+Nwankpa, C., Ijomah, W., Gachagan, A. und Marshall, S.:
+\textit{Activation Functions: Comparison of Trends in Practice and Research for Deep Learning}. 
+arXiv:1811.03378, November 2018.
+
+\bibitem{glorot}
+Glorot, X., Bordes, A., und Bengio, Y.:
+\textit{Deep sparse rectifier neural networks.}
+In Aistats, 2011, vol. 15, S. 315-323.
+
+\bibitem{goodfellow}
+Goodfellow, I., Bengio, Y. und Courville, A.. 
+\textit{Deep Learning}. 
+MIT Press, 2016.
+
+\bibitem{gyorfi}
+Györfi, L., Kohler, M., Krzyzak, A. und Walk, H.:
+\textit{A Distribution-Free Theory of Nonparametric Regression.}
+Springer Series in Statistics. Springer-Verlag, New York, 2002.
+
+\bibitem{he}
+He, K., Zhang, X., Ren, S. und Sun, J.:
+\textit{Deep Residual Learning for Image Recognition.}
+In Aistats, 2011, vol. 15, S. 315-323.
+
+\bibitem{juditsky}
+Juditsky, A., B., Lepski, O. V. und Tsybakov, A., B.:
+\textit{Nonparametric estimation of composite functions.}
+The Annals of Statistics, 2009, Vol. 37, No. 3, 1360?1404.
+
+
+\bibitem{kohler1}
+Kohler, Michael:
+\textit{Kurvenschätzung.}
+Unveröffentlichtes Skript, Universität Darmstadt. 
+Erschienen im Sommersemester 2015.
+
+\bibitem{krihevsky}
+Krizhevsky, A., Sutskever, I., und Hinton, G. E:
+\textit{ImageNet Classification with Deep Convolutional
+Neural Networks.}
+In Advances in Neural Information Processing Systems 25, F. Pereira, C. J. C. Burges, L. Bottou, und K. Q. Weinberger, Eds. Curran Associates, Inc., 2012, S. 1097-1105.
+
+\bibitem{lin}
+Lin, H. W., Tegmark, M. und Rolnick, D.:
+\textit{Why does deep and cheap learning work so well?}
+arXiv:1608.08225, August 2017.
+
+\bibitem{mehlig}
+Mehlig, Bernhard:
+\textit{Artificial Neural Networks}. 
+arXiv:1901.05639, Februar 2019.
+
+\bibitem{pinkus}
+Pinkus, Allan:
+\textit{Approximation theory of the MLP model
+in neural networks.}
+Acta Numerica, 1999, 143-195.
+
+\bibitem{richter}
+Richter, Stefan:
+\textit{Statistisches und maschinelles Lernen, Version 1.}
+Springer-Verlag Berlin Heidelberg, September 2018.
+
+\bibitem{hieber}
+Schmidt-Hieber, Johannes:
+\textit{Nonparametric regression using deep neural networks with relu activation function.}
+arXiv:1708.06633, März 2019.
+
+
+\bibitem{hieber2}
+Schmidt-Hieber, Johannes:
+\textit{Statistical theory for deep neural networks with ReLU activation function.}
+MIFODS - Stochastics and Statistics joint seminar, Cambridge US, 23. März 2018.
+
+\bibitem{schmidthuber}
+Schmidthuber, Jürgen:
+\textit{Deep Learning in Neural Networks: An Overview}
+arXiv:1404.7828, Oktober 2014.
+
+
+
+\bibitem{stone}
+Stone, C. J.:
+\textit{Optimal global rates of convergence for nonparametric regression.
+}
+Annals of Statistics, 10, S.1040-1053.
+1982.
+
+
+\bibitem{strauch}
+Strauch, Claudia:
+\textit{Nonparametric Statistics.}
+Lecture notes, Universität Mannheim. 
+Erschienen am 13. Mai 2019.
+
+\bibitem{tegmark}
+Tegmark, M., Lin, H., W. und Rolnick D.:
+\textit{Why does deep and cheap learning work so well?}
+arXiv:1608.08225v4, 3. August 2017.
+
+\bibitem{tenenbaum}
+Tenenbaum, J., Tegmark, M. und Poggio, T.:
+\textit{CBMM Research Meeting: On Compositionality (Debate/Discussion)}
+CBMM Special Seminars, 16. Dezember 2016.
+
+\bibitem{woernle}
+Woernle, Maike Inga:
+\textit{Anwendbarkeit künstlicher neuronaler Netze zur Untergrundbewertung in der oberflächennahen Geothermie}
+unveröffentlichte Dissertation, Universität Fridericiana zu Karlsruhe, 2008.
+
+
+
+\end{thebibliography}
+
+
+
+\end{document}  
+
+
+
+ 

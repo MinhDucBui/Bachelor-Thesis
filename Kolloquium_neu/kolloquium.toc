@@ -1,0 +1,18 @@
+\beamer@sectionintoc {1}{Einleitung}{4}{0}{1}
+\beamer@subsectionintoc {1}{1}{Ziel der Arbeit}{5}{0}{1}
+\beamer@subsectionintoc {1}{2}{Nichtparametrische Regression}{6}{0}{1}
+\beamer@subsectionintoc {1}{3}{Konvergenzrate}{9}{0}{1}
+\beamer@sectionintoc {2}{Beschreibung des Modells}{11}{0}{2}
+\beamer@subsectionintoc {2}{1}{Definition eines neuronalen Netzwerkes}{12}{0}{2}
+\beamer@subsectionintoc {2}{2}{Rahmenbedingungen des Modells}{14}{0}{2}
+\beamer@subsubsectionintoc {2}{2}{1}{Aktivierungsfunktion}{15}{0}{2}
+\beamer@subsubsectionintoc {2}{2}{2}{Netzwerkparameter}{18}{0}{2}
+\beamer@subsubsectionintoc {2}{2}{3}{D\IeC {\"u}nnbesetzte Parameter}{19}{0}{2}
+\beamer@subsubsectionintoc {2}{2}{4}{Hierarchische Komposition der Regressionsfunktion}{21}{0}{2}
+\beamer@subsectionintoc {2}{3}{Glattheit einer kompositionalen Funktion}{26}{0}{2}
+\beamer@subsectionintoc {2}{4}{Empirisches Risiko}{27}{0}{2}
+\beamer@sectionintoc {3}{Hauptresultat}{28}{0}{3}
+\beamer@subsectionintoc {3}{1}{Obere Schranke des L\textsubscript {2}-Fehler}{29}{0}{3}
+\beamer@subsubsectionintoc {3}{1}{1}{Folgerungen aus Theorem 1}{32}{0}{3}
+\beamer@subsectionintoc {3}{2}{Untere Schranke des L\textsubscript {2}-Fehler}{33}{0}{3}
+\beamer@subsectionintoc {3}{3}{Beweisidee zum Haupttheorem}{35}{0}{3}

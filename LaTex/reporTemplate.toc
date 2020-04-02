@@ -1,0 +1,26 @@
+\contentsline {section}{\numberline {1}Einleitung und Motivation}{3}{section.1}% 
+\contentsline {subsection}{\numberline {1.1}Ziel der Arbeit}{4}{subsection.1.1}% 
+\contentsline {subsection}{\numberline {1.2}Nichtparametrische Regression}{4}{subsection.1.2}% 
+\contentsline {subsection}{\numberline {1.3}Konvergenzrate}{7}{subsection.1.3}% 
+\contentsline {subsection}{\numberline {1.4}Notationen}{8}{subsection.1.4}% 
+\contentsline {section}{\numberline {2}Beschreibung des Modells}{9}{section.2}% 
+\contentsline {subsection}{\numberline {2.1}Motivation und Definition eines neuronalen Netzwerkes}{9}{subsection.2.1}% 
+\contentsline {subsection}{\numberline {2.2}Rahmenbedingungen des Modells}{12}{subsection.2.2}% 
+\contentsline {subsubsection}{\numberline {2.2.1}Aktivierungsfunktion}{12}{subsubsection.2.2.1}% 
+\contentsline {subsubsection}{\numberline {2.2.2}Netzwerkparameter}{14}{subsubsection.2.2.2}% 
+\contentsline {subsubsection}{\numberline {2.2.3}D\"unnbesetzte Parameter}{16}{subsubsection.2.2.3}% 
+\contentsline {subsubsection}{\numberline {2.2.4}Hierarchische Komposition der Regressionsfunktion}{17}{subsubsection.2.2.4}% 
+\contentsline {subsection}{\numberline {2.3}Glattheit einer kompositionalen Funktion}{19}{subsection.2.3}% 
+\contentsline {subsection}{\numberline {2.4}Empirisches Risiko}{20}{subsection.2.4}% 
+\contentsline {section}{\numberline {3}Hauptresultat}{20}{section.3}% 
+\contentsline {subsection}{\numberline {3.1}Obere Schranke des L\textsubscript {2}-Fehler}{21}{subsection.3.1}% 
+\contentsline {subsubsection}{\numberline {3.1.1}Folgerungen aus Theorem 1}{22}{subsubsection.3.1.1}% 
+\contentsline {subsection}{\numberline {3.2}Untere Schranke des L\textsubscript {2}-Fehler}{25}{subsection.3.2}% 
+\contentsline {subsection}{\numberline {3.3}Beweise}{25}{subsection.3.3}% 
+\contentsline {subsubsection}{\numberline {3.3.1}Einbettungseigenschaften einer Netzwerkfunktionsklasse}{25}{subsubsection.3.3.1}% 
+\contentsline {subsubsection}{\numberline {3.3.2}Approximationsqualit\"at neuronaler Netzwerke}{27}{subsubsection.3.3.2}% 
+\contentsline {subsubsection}{\numberline {3.3.3}Beweis zum Theorem 1}{33}{subsubsection.3.3.3}% 
+\contentsline {section}{\numberline {4}Beispiele}{39}{section.4}% 
+\contentsline {subsection}{\numberline {4.1}Additive Modelle}{40}{subsection.4.1}% 
+\contentsline {subsection}{\numberline {4.2}Verallgemeinerte additive Modelle}{41}{subsection.4.2}% 
+\contentsline {section}{\numberline {5}Ausblick}{42}{section.5}% 
